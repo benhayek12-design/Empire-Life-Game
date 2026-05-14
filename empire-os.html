@@ -1,0 +1,1955 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Empire OS" />
+  <meta name="theme-color" content="#0a0e0c" />
+  <title>Empire OS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,500;0,700;1,500;1,700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg:           #0a0e0c;
+      --surface:      rgba(255,255,240,0.04);
+      --surface-hi:   rgba(255,255,240,0.07);
+      --border:       rgba(200,220,180,0.10);
+      --border-hi:    rgba(200,220,180,0.22);
+      --text:         #eef5e8;
+      --text-muted:   rgba(220,240,200,0.65);
+      --text-dim:     rgba(220,240,200,0.35);
+      --gold:         #e8c068;
+      --gold-light:   #f5d98a;
+      --mint:         #7dd3c0;
+      --mint-light:   #a8e6d8;
+      --sage:         #a0d97c;
+      --sage-light:   #c0e8a0;
+      --rose:         #e8869a;
+      --purple:       #b89bf0;
+      --orange:       #ffa974;
+      --green:        #7ec856;
+      --red:          #ff7e7e;
+      --cyan:         #66d9e8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { background: var(--bg); }
+
+    body {
+      min-height: 100vh;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      overflow-x: hidden;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* Background atmosphere */
+    .bg-layer {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 70% 50% at 0% 0%,   rgba(50,90,30,0.22) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 100% 100%, rgba(35,70,20,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(15,30,10,0.3) 0%, transparent 70%),
+        linear-gradient(155deg, #080c08 0%, #0a0e0c 45%, #0c1109 100%);
+    }
+    .bg-glow {
+      position: fixed; bottom: -120px; left: 50%; transform: translateX(-50%);
+      width: 420px; height: 320px;
+      background: radial-gradient(ellipse, rgba(150,90,15,0.13) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* Plants - subtle decoration */
+    .plants { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
+    .p-bl, .p-tr {
+      position: fixed;
+      opacity: 0.18;
+    }
+    .p-bl { bottom: -20px; left: -28px; width: 200px; transform-origin: bottom left; animation: sway 11s ease-in-out infinite; }
+    .p-tr { top: -8px; right: -8px; width: 165px; transform-origin: top right; animation: swayHang 13s ease-in-out infinite; animation-delay: -3s; }
+
+    @keyframes sway { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(2.5deg); } }
+    @keyframes swayHang { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(2deg); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(-8px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+    @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 currentColor; } 50% { box-shadow: 0 0 0 6px transparent; } }
+
+    /* App container */
+    .app {
+      position: relative;
+      z-index: 2;
+      max-width: 560px;
+      margin: 0 auto;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      padding: max(env(safe-area-inset-top), 14px) 18px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,14,12,0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .brand .name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      letter-spacing: 3px;
+      line-height: 1;
+    }
+    .brand .name .w { color: var(--gold); }
+    .brand .name .l { color: var(--mint); }
+    .brand .name .c { color: var(--sage); }
+    .brand .name .x { color: var(--text-dim); margin: 0 4px; }
+    .brand .tag {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+      margin-top: 3px;
+    }
+    .header-stats { display: flex; gap: 14px; align-items: center; }
+    .stat-mini { text-align: center; }
+    .stat-mini .v {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      line-height: 1;
+    }
+    .stat-mini .l {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 8px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+    .stat-mini.streak .v { color: var(--red); }
+    .stat-mini.trophy .v { color: var(--purple); }
+    .settings-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      -webkit-appearance: none;
+    }
+    .settings-btn:active { transform: scale(0.94); }
+
+    /* Tab nav */
+    .nav {
+      display: flex;
+      background: rgba(10,14,12,0.4);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 73px;
+      z-index: 9;
+    }
+    .nav button {
+      flex: 1;
+      padding: 9px 2px;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 12px;
+      letter-spacing: 2px;
+      transition: all 0.2s;
+      -webkit-appearance: none;
+    }
+    .nav button.active { border-bottom-color: currentColor; }
+    .nav button .icon { font-size: 13px; display: block; line-height: 1.2; }
+    .nav button[data-tab="hq"] { color: var(--text); }
+    .nav button[data-tab="wealth"] { color: var(--gold); }
+    .nav button[data-tab="life"] { color: var(--mint); }
+    .nav button[data-tab="confidence"] { color: var(--sage); }
+    .nav button[data-tab="trophies"] { color: var(--purple); }
+    .nav button:not(.active) { color: var(--text-dim); }
+
+    /* Main content */
+    .content {
+      padding: 16px 14px calc(env(safe-area-inset-bottom, 0px) + 60px);
+    }
+    .tab-pane { display: none; animation: fadeIn 0.3s ease both; }
+    .tab-pane.active { display: block; }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .card-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 14px;
+      letter-spacing: 3px;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .card-title .accent { color: var(--gold); }
+
+    /* Level cards */
+    .level-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+    .level-card.gold { border-color: rgba(232,192,104,0.25); }
+    .level-card.mint { border-color: rgba(125,211,192,0.25); }
+    .level-card.sage { border-color: rgba(160,217,124,0.25); }
+    .level-card .glow {
+      position: absolute; top: -30px; right: -30px;
+      width: 100px; height: 100px; pointer-events: none;
+      background: radial-gradient(circle, currentColor 0%, transparent 70%);
+      opacity: 0.15;
+    }
+    .level-card.gold .glow { color: var(--gold); }
+    .level-card.mint .glow { color: var(--mint); }
+    .level-card.sage .glow { color: var(--sage); }
+    .level-card .label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 2px;
+      opacity: 0.75;
+    }
+    .level-card .level-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 38px;
+      line-height: 1;
+      margin-top: 2px;
+    }
+    .level-card .level-title {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 14px;
+      opacity: 0.85;
+      margin-top: 2px;
+    }
+    .level-card .progress-bar {
+      background: rgba(255,255,255,0.06);
+      border-radius: 3px;
+      height: 4px;
+      margin-top: 12px;
+      overflow: hidden;
+    }
+    .level-card .progress-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .level-card .xp-text {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+    .level-card.gold .level-num, .level-card.gold .label, .level-card.gold .level-title { color: var(--gold); }
+    .level-card.mint .level-num, .level-card.mint .label, .level-card.mint .level-title { color: var(--mint); }
+    .level-card.sage .level-num, .level-card.sage .label, .level-card.sage .level-title { color: var(--sage); }
+    .level-card.gold .progress-fill { background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
+    .level-card.mint .progress-fill { background: linear-gradient(90deg, var(--mint), var(--mint-light)); }
+    .level-card.sage .progress-fill { background: linear-gradient(90deg, var(--green), var(--sage)); }
+
+    .pillar-row { display: flex; gap: 8px; margin-bottom: 14px; }
+    .pillar-row .level-card { flex: 1; padding: 12px 10px; }
+    .pillar-row .level-num { font-size: 28px; }
+    .pillar-row .level-title { font-size: 11px; }
+
+    /* HQ Hero */
+    .hq-hero {
+      text-align: center;
+      padding: 14px 8px 18px;
+    }
+    .hq-hero .date {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      color: var(--sage);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .hq-hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 38px;
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -0.5px;
+    }
+    .hq-hero h1 em {
+      font-style: italic;
+      color: var(--gold-light);
+      font-weight: 500;
+    }
+    .hq-hero .quote {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 10px;
+      max-width: 340px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Track cards */
+    .track-card {
+      border-top: 1px solid var(--border);
+      padding: 14px 0;
+      margin-bottom: 0;
+    }
+    .track-card:first-child {
+      border-top: none;
+      padding-top: 0;
+    }
+    .track-card:last-child {
+      padding-bottom: 0;
+    }
+    .track-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+    .track-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 19px;
+      letter-spacing: 2px;
+      line-height: 1.1;
+    }
+    .track-sub {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .track-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 24px;
+      text-align: right;
+      line-height: 1;
+    }
+    .track-target {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+      text-align: right;
+      margin-top: 2px;
+    }
+    .track-progress {
+      background: rgba(255,255,255,0.05);
+      border-radius: 4px;
+      height: 4px;
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+    .track-progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .track-actions { display: flex; flex-direction: column; gap: 5px; }
+
+    /* Today's logged actions inside a track */
+    .today-log {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 9px 11px;
+      margin-bottom: 10px;
+      margin-top: 2px;
+    }
+    .today-log-header {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+      margin-bottom: 5px;
+    }
+    .today-log-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0;
+      font-size: 11.5px;
+      border-top: 1px solid rgba(255,255,255,0.04);
+    }
+    .today-log-item:first-of-type { border-top: none; }
+    .today-log-text {
+      flex: 1;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+    .today-log-xp {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+    .today-log-undo {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 16px;
+      cursor: pointer;
+      padding: 2px 6px;
+      line-height: 1;
+      -webkit-appearance: none;
+      flex-shrink: 0;
+    }
+    .today-log-undo:active { transform: scale(0.85); }
+    .action-btn {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--text);
+      padding: 9px 12px;
+      text-align: left;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.15s;
+      -webkit-appearance: none;
+    }
+    .action-btn:active { transform: scale(0.98); background: rgba(255,255,255,0.06); }
+    .action-btn .xp-badge {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      margin-left: 8px;
+      flex-shrink: 0;
+    }
+
+    .finance-input-row { display: flex; gap: 6px; margin-bottom: 12px; }
+    .finance-input-row input {
+      flex: 1;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border-hi);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 9px 12px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    .finance-input-row button {
+      background: var(--gold);
+      color: #1a1208;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 16px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 14px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      -webkit-appearance: none;
+    }
+
+    /* Habits */
+    .habit-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 13px 14px;
+      cursor: pointer;
+      transition: all 0.18s;
+      margin-bottom: 7px;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .habit-card:active { transform: scale(0.985); }
+    .habit-card.checked {
+      background: rgba(160,217,124,0.07);
+      border-color: rgba(160,217,124,0.32);
+    }
+    .habit-card.life.checked {
+      background: rgba(125,211,192,0.07);
+      border-color: rgba(125,211,192,0.32);
+    }
+    .habit-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+      width: 28px;
+      text-align: center;
+    }
+    .habit-info { flex: 1; min-width: 0; }
+    .habit-title {
+      font-size: 13.5px;
+      font-weight: 500;
+      line-height: 1.25;
+      transition: color 0.2s;
+    }
+    .habit-card.checked .habit-title {
+      color: var(--sage-light);
+      text-decoration: line-through;
+      text-decoration-color: rgba(192,232,160,0.4);
+    }
+    .habit-card.life.checked .habit-title { color: var(--mint-light); text-decoration-color: rgba(168,230,216,0.4); }
+    .habit-desc {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-top: 2px;
+    }
+    .habit-streak {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      color: var(--red);
+      margin-top: 3px;
+    }
+    .check-ring {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid rgba(200,220,180,0.25);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      color: transparent;
+      transition: all 0.2s;
+    }
+    .habit-card.checked .check-ring {
+      background: var(--green);
+      border-color: var(--green);
+      color: #0a1306;
+    }
+    .habit-card.life.checked .check-ring { background: var(--mint); border-color: var(--mint); }
+
+    /* Lifestyle habits grid for HQ */
+    .habits-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .mini-habit {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 10px;
+      cursor: pointer;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      min-height: 54px;
+      transition: all 0.18s;
+      -webkit-appearance: none;
+      text-align: left;
+      color: var(--text);
+      font-family: inherit;
+    }
+    .mini-habit:active { transform: scale(0.97); }
+    .mini-habit.checked {
+      background: rgba(125,211,192,0.08);
+      border-color: rgba(125,211,192,0.35);
+    }
+    .mini-habit .icon { font-size: 16px; flex-shrink: 0; }
+    .mini-habit .label {
+      flex: 1;
+      font-size: 11px;
+      line-height: 1.2;
+      min-width: 0;
+    }
+    .mini-habit .check {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      border: 2px solid rgba(200,220,180,0.25);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      color: transparent;
+    }
+    .mini-habit.checked .check {
+      background: var(--mint);
+      border-color: var(--mint);
+      color: #0a1306;
+    }
+
+    /* Quests */
+    .quest {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      margin-bottom: 6px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.025);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .quest:active { transform: scale(0.99); }
+    .quest.done { opacity: 0.45; background: rgba(126,200,86,0.06); border-color: rgba(126,200,86,0.18); cursor: default; }
+    .quest .ring {
+      width: 18px; height: 18px;
+      border-radius: 4px;
+      border: 2px solid rgba(200,220,180,0.3);
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px;
+      color: transparent;
+    }
+    .quest.done .ring { background: var(--green); border-color: var(--green); color: #0a1306; }
+    .quest .body { flex: 1; }
+    .quest .body .text {
+      font-size: 12.5px;
+      color: var(--text);
+    }
+    .quest.done .text { text-decoration: line-through; color: var(--text-dim); }
+    .quest .body .pillar {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      margin-top: 2px;
+    }
+    .quest .xp {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+    /* Wins journal */
+    .wins-input, .journal-input {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 13px 14px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      line-height: 1.6;
+      resize: vertical;
+      outline: none;
+      min-height: 90px;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+    .wins-input::placeholder, .journal-input::placeholder { color: var(--text-dim); }
+    .wins-input:focus, .journal-input:focus { border-color: var(--border-hi); }
+
+    .save-btn {
+      background: var(--sage);
+      color: #0a1306;
+      border: none;
+      border-radius: 9px;
+      padding: 10px 22px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 14px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.15s;
+      width: 100%;
+      margin-top: 10px;
+      -webkit-appearance: none;
+    }
+    .save-btn:active { transform: scale(0.98); }
+    .save-btn.gold { background: var(--gold); color: #1a1208; }
+    .save-btn.saved { background: var(--gold-light); }
+
+    /* History */
+    .history-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+    }
+    .history-date {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 6px;
+    }
+    .history-dots { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
+    .history-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+    }
+    .history-dot.done { background: var(--green); }
+    .history-wins {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+    .toggle-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      width: 100%;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 12.5px;
+      cursor: pointer;
+      -webkit-appearance: none;
+    }
+
+    /* Recent activity */
+    .activity-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-item .meta { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--text-dim); margin-top: 2px; }
+    .activity-item .xp { font-family: 'IBM Plex Mono', monospace; font-size: 11px; margin-left: 10px; }
+
+    /* Achievements */
+    .ach-filter { display: flex; gap: 5px; margin-bottom: 12px; }
+    .ach-filter button {
+      flex: 1;
+      padding: 6px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-dim);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 11px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      -webkit-appearance: none;
+    }
+    .ach-filter button.active { background: var(--surface-hi); color: var(--text); border-color: var(--border-hi); }
+
+    .ach-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .ach-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      opacity: 0.5;
+    }
+    .ach-card.unlocked { opacity: 1; }
+    .ach-card.wealth.unlocked { background: rgba(232,192,104,0.06); border-color: rgba(232,192,104,0.3); }
+    .ach-card.life.unlocked { background: rgba(125,211,192,0.06); border-color: rgba(125,211,192,0.3); }
+    .ach-card.confidence.unlocked { background: rgba(160,217,124,0.06); border-color: rgba(160,217,124,0.3); }
+    .ach-card.balance.unlocked { background: rgba(184,155,240,0.06); border-color: rgba(184,155,240,0.3); }
+    .ach-card .icon { font-size: 22px; margin-bottom: 4px; }
+    .ach-card .name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 13px;
+      letter-spacing: 1px;
+      line-height: 1.1;
+      margin-bottom: 3px;
+      color: var(--text-dim);
+    }
+    .ach-card.unlocked.wealth .name { color: var(--gold); }
+    .ach-card.unlocked.life .name { color: var(--mint); }
+    .ach-card.unlocked.confidence .name { color: var(--sage); }
+    .ach-card.unlocked.balance .name { color: var(--purple); }
+    .ach-card .desc { font-size: 10.5px; color: var(--text-muted); line-height: 1.3; }
+    .ach-card .xp { font-family: 'IBM Plex Mono', monospace; font-size: 9px; margin-top: 5px; color: var(--text-dim); }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(10,14,12,0.95);
+      backdrop-filter: blur(12px);
+      border: 1px solid;
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      z-index: 1000;
+      letter-spacing: 1px;
+      animation: toastIn 0.25s ease;
+      pointer-events: none;
+      white-space: nowrap;
+      max-width: 90vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Settings modal */
+    .modal-bg {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+    }
+    .modal-bg.open { display: flex; animation: fadeIn 0.2s ease; }
+    .modal {
+      background: #0e1310;
+      border: 1px solid var(--border-hi);
+      border-radius: 16px;
+      padding: 22px;
+      max-width: 460px;
+      width: 100%;
+      max-height: 88vh;
+      overflow-y: auto;
+    }
+    .modal h2 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+    .modal .modal-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+      line-height: 1.5;
+    }
+    .modal-section { margin-bottom: 16px; }
+    .modal-section h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 13px;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+    .backup-row { display: flex; gap: 6px; margin-top: 8px; }
+    .backup-row button {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border-hi);
+      border-radius: 8px;
+      padding: 9px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      -webkit-appearance: none;
+    }
+    .backup-row button:active { background: var(--surface-hi); }
+    .backup-status { font-size: 11px; color: var(--green); text-align: center; margin-top: 8px; min-height: 14px; }
+    .backup-status.error { color: var(--red); }
+    .modal-close {
+      background: var(--surface);
+      border: 1px solid var(--border-hi);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 9px;
+      width: 100%;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 13px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      margin-top: 10px;
+      -webkit-appearance: none;
+    }
+    .reset-btn {
+      background: rgba(255,126,126,0.1);
+      border: 1px solid rgba(255,126,126,0.3);
+      color: var(--red);
+      border-radius: 8px;
+      padding: 9px;
+      width: 100%;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      margin-top: 6px;
+      -webkit-appearance: none;
+    }
+
+    /* Empty state */
+    .empty {
+      text-align: center;
+      padding: 30px 16px;
+      color: var(--text-dim);
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 13px;
+    }
+
+    /* Onboarding */
+    .onboarding-pillar-info {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      padding: 0 4px;
+      margin-bottom: 14px;
+    }
+
+    @media (max-width: 380px) {
+      .hq-hero h1 { font-size: 32px; }
+      .pillar-row .level-num { font-size: 24px; }
+      .stat-mini .v { font-size: 18px; }
+    }
+  </style>
+
+</head>
+<body>
+  <div class="bg-layer"></div>
+  <div class="bg-glow"></div>
+
+  <div class="plants" aria-hidden="true">
+    <svg class="p-bl" viewBox="0 0 230 290" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M65 290 Q68 210 82 165 Q96 125 112 95" stroke="#2d5a1b" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <path d="M82 165 Q28 115 8 58 Q38 50 68 76 Q90 102 82 165Z" fill="#1e4a12"/>
+      <path d="M34 76 Q28 58 15 62" stroke="#091507" stroke-width="3.5" fill="none"/>
+      <path d="M50 100 Q44 82 36 86" stroke="#091507" stroke-width="3.5" fill="none"/>
+      <path d="M96 125 Q152 82 182 28 Q156 18 126 40 Q100 68 96 125Z" fill="#1a4210" opacity="0.9"/>
+      <path d="M112 95 Q142 62 158 36 Q136 28 116 52 Q106 72 112 95Z" fill="#22501a" opacity="0.75"/>
+    </svg>
+    <svg class="p-tr" viewBox="0 0 185 230" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M175 0 Q168 45 156 78 Q144 108 130 140 Q118 165 104 192" stroke="#285a18" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M156 78 Q122 64 114 42 Q132 32 150 50 Q160 66 156 78Z" fill="#1e4a12" opacity="0.88"/>
+      <path d="M130 140 Q96 130 90 106 Q110 94 128 114 Q134 128 130 140Z" fill="#1c4810" opacity="0.82"/>
+      <path d="M140 58 Q116 46 110 28 Q128 18 140 38 Q144 50 140 58Z" fill="#1a4210" opacity="0.72"/>
+    </svg>
+  </div>
+
+  <div class="app">
+    <header class="header">
+      <div class="brand">
+        <div class="name">
+          <span class="w">WEALTH</span><span class="x">×</span><span class="l">LIFE</span><span class="x">×</span><span class="c">SELF</span>
+        </div>
+        <div class="tag">EMPIRE OS · YEAR 1</div>
+      </div>
+      <div class="header-stats">
+        <div class="stat-mini streak"><div class="v" id="hStreak">0</div><div class="l">🔥 STREAK</div></div>
+        <div class="stat-mini trophy"><div class="v" id="hTrophies">0</div><div class="l">◆ AWARDS</div></div>
+        <button class="settings-btn" onclick="openSettings()" aria-label="Settings">⚙</button>
+      </div>
+    </header>
+
+```
+<nav class="nav" id="nav">
+  <button data-tab="hq" class="active"><span class="icon">◈</span>HQ</button>
+  <button data-tab="wealth"><span class="icon">$</span>WEALTH</button>
+  <button data-tab="life"><span class="icon">♥</span>LIFE</button>
+  <button data-tab="confidence"><span class="icon">✦</span>SELF</button>
+  <button data-tab="trophies"><span class="icon">◆</span>AWARDS</button>
+</nav>
+
+<main class="content">
+  <!-- HQ -->
+  <section class="tab-pane active" id="tab-hq">
+    <div class="hq-hero">
+      <p class="date" id="dateLabel"></p>
+      <h1>Build the <em>empire</em>.<br>Tend the <em>self</em>.</h1>
+      <p class="quote">"Every day is a brick. Stack them well."</p>
+    </div>
+
+    <div class="pillar-row" id="pillarRow"></div>
+
+    <div class="card">
+      <div class="card-title"><span>WEEKLY QUESTS</span></div>
+      <div id="weeklyQuests"></div>
+    </div>
+
+    <div class="card" id="recentActivityCard" style="display:none;">
+      <div class="card-title"><span>RECENT</span></div>
+      <div id="recentActivity"></div>
+    </div>
+  </section>
+
+  <!-- WEALTH -->
+  <section class="tab-pane" id="tab-wealth">
+    <div class="level-card gold" style="margin-bottom:14px;">
+      <div class="glow"></div>
+      <div class="label">WEALTH PILLAR</div>
+      <div class="level-num" id="wealthLvlNum">LVL 1</div>
+      <div class="level-title" id="wealthLvlTitle">Freshman</div>
+      <div class="progress-bar"><div class="progress-fill" id="wealthLvlBar"></div></div>
+      <div class="xp-text" id="wealthLvlXp"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>TRACK PROGRESS</span>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;font-family:'Playfair Display',serif;font-style:italic;">Log every action. Small moves compound into everything.</p>
+      <div id="wealthTracks"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="color:var(--gold);"><span>📓 PROBLEM JOURNAL</span></div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;line-height:1.5;font-family:'Playfair Display',serif;font-style:italic;">Log broken processes and pain points. This is where your company comes from.</p>
+      <textarea class="journal-input" id="journalInput" placeholder="Advisors still manually copy data between platforms every morning..."></textarea>
+      <button class="save-btn gold" onclick="logJournal()">LOG OBSERVATION · +25 XP</button>
+      <div id="journalEntries" style="margin-top:14px;"></div>
+    </div>
+  </section>
+
+  <!-- LIFE -->
+  <section class="tab-pane" id="tab-life">
+    <div class="level-card mint" style="margin-bottom:14px;">
+      <div class="glow"></div>
+      <div class="label">LIFE PILLAR</div>
+      <div class="level-num" id="lifeLvlNum">LVL 1</div>
+      <div class="level-title" id="lifeLvlTitle">Initiate</div>
+      <div class="progress-bar"><div class="progress-fill" id="lifeLvlBar"></div></div>
+      <div class="xp-text" id="lifeLvlXp"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>DAILY HABITS</span>
+        <span id="lifeTodayStats" style="color:var(--mint);font-family:'IBM Plex Mono',monospace;font-size:11px;"></span>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;font-family:'Playfair Display',serif;font-style:italic;">Eight habits. Every day. The foundation of everything else.</p>
+      <div id="lifeHabits"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>TRACK PROGRESS</span></div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;font-family:'Playfair Display',serif;font-style:italic;">Log the bigger milestones as they happen.</p>
+      <div id="lifeTracks"></div>
+    </div>
+  </section>
+
+  <!-- CONFIDENCE / SELF -->
+  <section class="tab-pane" id="tab-confidence">
+    <div class="level-card sage" style="margin-bottom:14px;">
+      <div class="glow"></div>
+      <div class="label">SELF PILLAR · CONFIDENCE</div>
+      <div class="level-num" id="confLvlNum">LVL 1</div>
+      <div class="level-title" id="confLvlTitle">Awakening</div>
+      <div class="progress-bar"><div class="progress-fill" id="confLvlBar"></div></div>
+      <div class="xp-text" id="confLvlXp"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>SEVEN PRACTICES</span>
+        <span id="confTodayStats" style="color:var(--sage);font-family:'IBM Plex Mono',monospace;font-size:11px;"></span>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;font-family:'Playfair Display',serif;font-style:italic;">Seven practices. Every day. Compounding.</p>
+      <div id="confidenceHabits"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="color:var(--sage);"><span>✨ TODAY'S WINS</span></div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;line-height:1.5;font-family:'Playfair Display',serif;font-style:italic;">What did you handle well today? No matter how small.</p>
+      <textarea class="wins-input" id="winsInput" placeholder="1. I spoke up when I usually wouldn't...&#10;2. I went for a walk even when tired...&#10;3. I caught myself comparing and refocused..."></textarea>
+      <button class="save-btn" id="saveWinsBtn" onclick="saveWins()">SAVE WINS · +25 XP</button>
+    </div>
+
+    <div class="card">
+      <button class="toggle-btn" onclick="toggleHistory()">📅 View Past Days</button>
+      <div id="historyList" style="display:none;margin-top:12px;"></div>
+    </div>
+  </section>
+
+  <!-- TROPHIES -->
+  <section class="tab-pane" id="tab-trophies">
+    <div class="ach-filter" id="achFilter">
+      <button data-filter="all" class="active">ALL</button>
+      <button data-filter="wealth">WEALTH</button>
+      <button data-filter="life">LIFE</button>
+      <button data-filter="confidence">SELF</button>
+      <button data-filter="balance">BAL</button>
+    </div>
+    <p id="achCounter" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:2px;margin-bottom:12px;"></p>
+    <div class="ach-grid" id="achGrid"></div>
+  </section>
+</main>
+```
+
+  </div>
+
+  <!-- Settings modal -->
+
+  <div class="modal-bg" id="settingsModal" onclick="if(event.target===this)closeSettings()">
+    <div class="modal">
+      <h2>Settings</h2>
+      <p class="modal-desc">Your data lives in this browser. Back it up regularly.</p>
+
+```
+  <div class="modal-section">
+    <h3>BACKUP & RESTORE</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;line-height:1.5;">Export to copy your data; paste a backup to restore on another device.</p>
+    <textarea class="wins-input" id="backupBox" rows="4" placeholder="Your data appears here when you Export, or paste a backup here to Restore."></textarea>
+    <div class="backup-row">
+      <button onclick="exportData()">⬆ EXPORT</button>
+      <button onclick="importData()">⬇ RESTORE</button>
+    </div>
+    <p class="backup-status" id="backupStatus"></p>
+  </div>
+
+  <div class="modal-section">
+    <h3>DANGER ZONE</h3>
+    <button class="reset-btn" onclick="resetAll()">⚠ Reset All Data</button>
+  </div>
+
+  <button class="modal-close" onclick="closeSettings()">CLOSE</button>
+</div>
+```
+
+  </div>
+
+  <script>
+    // ============ CONSTANTS ============
+    const STORAGE_KEY = "empire_os_v1";
+    const LEGACY_CONFIDENCE_KEY = "confidence_tracker_v1";
+
+    const WEALTH_TRACKS = [
+      { id:"industry", icon:"🏢", name:"Industry Exposure", subtitle:"Get inside wealth management",
+        color:"var(--gold)", target:12, unit:"months", xp:40,
+        actions:["Applied to analyst/associate role","Logged a broken process","Shadowed or interviewed a pro","Read a fintech industry report","Attended a finance/fintech event"] },
+      { id:"ai", icon:"🤖", name:"AI Fluency", subtitle:"Master AI tools without coding",
+        color:"var(--cyan)", target:100, unit:"hrs", xp:30,
+        actions:["Practiced prompt engineering (1hr)","Built something with no-code","Explored a fintech API","Tested AI on a financial use case","Followed a new AI/fintech founder"] },
+      { id:"network", icon:"🤝", name:"Network Building", subtitle:"50 conversations this year",
+        color:"var(--purple)", target:50, unit:"convos", xp:75,
+        actions:["Sent a cold LinkedIn message","Had a 20-min industry call","Met someone at an event","Got an intro from a contact","Added a potential co-founder"] },
+      { id:"finance", icon:"💰", name:"Financial Foundation", subtitle:"Build $40K founder runway",
+        color:"var(--green)", target:40000, unit:"$", xp:50,
+        actions:["Maxed Roth IRA contribution","Hit 401k match","Saved 30%+ of paycheck","Invested a windfall/bonus","Cut a major expense"] },
+    ];
+
+    const LIFE_TRACKS = [
+      { id:"fitness", icon:"💪", name:"Fitness", subtitle:"Strong body, strong mind",
+        color:"var(--rose)", target:200, unit:"sessions", xp:40,
+        actions:["Hit the gym (lifting)","Active day (walk/run/sport)","New PR or progression","Stretching / mobility","Full rest & recovery"] },
+      { id:"mind", icon:"🧘", name:"Mind", subtitle:"Mental clarity & growth",
+        color:"var(--purple)", target:365, unit:"sessions", xp:30,
+        actions:["10-min meditation","Journal entry","Read 30+ min non-fiction","Therapy / coaching","Digital detox (1+ hr)"] },
+      { id:"nutrition", icon:"🍳", name:"Nutrition", subtitle:"Fuel the machine",
+        color:"var(--green)", target:250, unit:"meals", xp:25,
+        actions:["Cooked a real meal","Hit protein goal","No junk food day","Meal prepped for week","Hit hydration target"] },
+      { id:"relationships", icon:"❤️", name:"Relationships", subtitle:"Wealth without people is poverty",
+        color:"var(--orange)", target:100, unit:"moments", xp:50,
+        actions:["Called family member","Quality time with friend","Date / romantic time","Sent thoughtful message","Deep conversation"] },
+    ];
+
+    // Lifestyle habits (daily)
+    const LIFESTYLE_HABITS = [
+      { id:"l_gym",      icon:"🏋️", name:"Gym or active day",            desc:"Lift, move, walk — anything that gets your body working.", xp:15 },
+      { id:"l_meditate", icon:"🧘", name:"Meditate / journal",            desc:"5+ minutes of quiet attention.",                          xp:10 },
+      { id:"l_read",     icon:"📖", name:"Read 30 min",                   desc:"Books over feeds.",                                       xp:10 },
+      { id:"l_cook",     icon:"🍳", name:"Cook real meal",                desc:"Real food, made by you.",                                 xp:10 },
+      { id:"l_call",     icon:"📞", name:"Call family / friend",          desc:"A voice, not a text.",                                    xp:10 },
+      { id:"l_sleep",    icon:"😴", name:"8hr sleep",                     desc:"Non-negotiable. Sleep is the multiplier.",                xp:15 },
+      { id:"l_nophone",  icon:"📵", name:"No phone first hour",           desc:"Own the start of your day.",                              xp:10 },
+      { id:"l_cold",     icon:"🚿", name:"Cold shower / morning routine", desc:"A small act of voluntary discomfort.",                    xp:10 },
+    ];
+
+    // Confidence habits (from confidence app, daily)
+    const CONFIDENCE_HABITS = [
+      { id:"uncomfortable", icon:"🔥", name:"Do One Uncomfortable Thing", desc:"Speak up, try something new, push a boundary.", xp:20 },
+      { id:"commitments",   icon:"🤝", name:"Keep a Promise to Yourself", desc:"Follow through on one thing you said you'd do.", xp:15 },
+      { id:"wins",          icon:"✨", name:"Log Your Wins",               desc:"Write 1–3 things you handled well today.",       xp:15 },
+      { id:"body",          icon:"🌿", name:"Move Your Body",              desc:"A walk, stretch, workout — check your posture.",  xp:15 },
+      { id:"comparison",    icon:"🛡", name:"Limit Comparison",            desc:"Catch yourself comparing and redirect inward.",   xp:15 },
+      { id:"prepare",       icon:"📖", name:"Prepare for Something",       desc:"Spend time getting ready for a challenge.",       xp:15 },
+      { id:"selftalk",      icon:"💬", name:"Mentor Self-Talk",            desc:"Reframe a harsh thought into honest encouragement.", xp:15 },
+    ];
+
+    const WEEKLY_QUESTS = [
+      { id:"wq1", text:"Apply to 2+ wealth management roles",  xp:60, pillar:"wealth", color:"var(--gold)" },
+      { id:"wq2", text:"Send 3 LinkedIn cold messages",         xp:80, pillar:"wealth", color:"var(--purple)" },
+      { id:"wq3", text:"1hr AI tool deep dive",                 xp:40, pillar:"wealth", color:"var(--cyan)" },
+      { id:"wq4", text:"Log a broken process observation",      xp:50, pillar:"wealth", color:"var(--gold)" },
+      { id:"lq1", text:"4+ gym sessions this week",             xp:80, pillar:"life",   color:"var(--rose)" },
+      { id:"lq2", text:"Meditate 5+ days this week",            xp:50, pillar:"life",   color:"var(--purple)" },
+      { id:"lq3", text:"Cook 5+ meals this week",               xp:50, pillar:"life",   color:"var(--green)" },
+      { id:"lq4", text:"Quality time with someone you love",    xp:60, pillar:"life",   color:"var(--orange)" },
+      { id:"cq1", text:"Hit all 7 confidence practices 3+ days", xp:100, pillar:"confidence", color:"var(--sage)" },
+      { id:"cq2", text:"One genuinely uncomfortable action",    xp:80, pillar:"confidence", color:"var(--green)" },
+    ];
+
+    const ACHIEVEMENTS = [
+      // Wealth
+      { id:"first_move", icon:"⚡", name:"First Move", desc:"Complete your first action", xp:0, pillar:"wealth", check:(s)=>s.totalActions>=1 },
+      { id:"observer", icon:"👁", name:"Pattern Seeker", desc:"Log 5 problem observations", xp:100, pillar:"wealth", check:(s)=>s.journalEntries.length>=5 },
+      { id:"network_10", icon:"🔗", name:"Network Node", desc:"10 industry conversations", xp:250, pillar:"wealth", check:(s)=>s.tp.network>=10 },
+      { id:"network_50", icon:"🏆", name:"The Connector", desc:"Hit 50 conversations", xp:1000, pillar:"wealth", check:(s)=>s.tp.network>=50 },
+      { id:"ai_50", icon:"🧠", name:"AI Native", desc:"50 hours of AI work", xp:400, pillar:"wealth", check:(s)=>s.tp.ai>=50 },
+      { id:"saver_10k", icon:"💎", name:"First $10K", desc:"Save $10,000 runway", xp:300, pillar:"wealth", check:(s)=>s.tp.finance>=10000 },
+      { id:"runway", icon:"🚀", name:"Founder Ready", desc:"Hit $40K runway", xp:1000, pillar:"wealth", check:(s)=>s.tp.finance>=40000 },
+      { id:"journal_10", icon:"📓", name:"Problem Hunter", desc:"10 journal observations", xp:300, pillar:"wealth", check:(s)=>s.journalEntries.length>=10 },
+      // Life
+      { id:"fit_10", icon:"🔥", name:"Getting Stronger", desc:"10 fitness sessions", xp:100, pillar:"life", check:(s)=>s.tp.fitness>=10 },
+      { id:"fit_50", icon:"💯", name:"Iron Disciple", desc:"50 fitness sessions", xp:400, pillar:"life", check:(s)=>s.tp.fitness>=50 },
+      { id:"fit_200", icon:"🦾", name:"Beast Mode", desc:"200 fitness sessions", xp:1000, pillar:"life", check:(s)=>s.tp.fitness>=200 },
+      { id:"mind_30", icon:"☯️", name:"Inner Work", desc:"30 mind sessions", xp:200, pillar:"life", check:(s)=>s.tp.mind>=30 },
+      { id:"mind_100", icon:"🪷", name:"Centered", desc:"100 mind sessions", xp:500, pillar:"life", check:(s)=>s.tp.mind>=100 },
+      { id:"chef", icon:"👨‍🍳", name:"Home Chef", desc:"50 home-cooked meals", xp:300, pillar:"life", check:(s)=>s.tp.nutrition>=50 },
+      { id:"love_25", icon:"💖", name:"Present", desc:"25 relationship moments", xp:250, pillar:"life", check:(s)=>s.tp.relationships>=25 },
+      // Confidence
+      { id:"conf_first", icon:"✨", name:"Began", desc:"First confidence practice", xp:50, pillar:"confidence", check:(s)=>s.confTotalDays>=1 },
+      { id:"conf_perfect", icon:"🌟", name:"Perfect Day", desc:"All 7 practices in one day", xp:150, pillar:"confidence", check:(s)=>s.confPerfectDays>=1 },
+      { id:"conf_7", icon:"🔥", name:"Week Strong", desc:"Practices on 7 days", xp:200, pillar:"confidence", check:(s)=>s.confTotalDays>=7 },
+      { id:"conf_30", icon:"👑", name:"Locked In", desc:"Practices on 30 days", xp:600, pillar:"confidence", check:(s)=>s.confTotalDays>=30 },
+      { id:"conf_perfect_5", icon:"💎", name:"5 Perfect Days", desc:"5 days with all 7 done", xp:400, pillar:"confidence", check:(s)=>s.confPerfectDays>=5 },
+      { id:"wins_10", icon:"📝", name:"Win Logger", desc:"10 days of wins logged", xp:200, pillar:"confidence", check:(s)=>s.winDaysCount>=10 },
+      // Balance
+      { id:"bal_5", icon:"⚖️", name:"Balanced", desc:"All 3 pillars to Level 5", xp:400, pillar:"balance", check:(s)=>calcLevel(s.wealthXp).lvl>=5 && calcLevel(s.lifeXp).lvl>=5 && calcLevel(s.confXp).lvl>=5 },
+      { id:"bal_10", icon:"🏛", name:"Whole Self", desc:"All 3 pillars to Level 10", xp:1000, pillar:"balance", check:(s)=>calcLevel(s.wealthXp).lvl>=10 && calcLevel(s.lifeXp).lvl>=10 && calcLevel(s.confXp).lvl>=10 },
+      { id:"streak_7", icon:"🔥", name:"Week Locked In", desc:"7-day app streak", xp:200, pillar:"balance", check:(s)=>s.streak>=7 },
+      { id:"streak_30", icon:"⚡", name:"Unstoppable", desc:"30-day streak", xp:800, pillar:"balance", check:(s)=>s.streak>=30 },
+    ];
+
+    const WEALTH_TITLES = ["","Freshman","Hustler","Builder","Grinder","Dangerous","Operator","Founder Mode","Traction","Series A","Unicorn Hunter","Category King","Titan","Mogul","Empire","Legend","Dynasty","Icon","Immortal","Billionaire","God Mode"];
+    const LIFE_TITLES = ["","Initiate","Awakening","Disciplined","Anchored","Grounded","Vital","Flowing","Aligned","Radiant","Magnetic","Embodied","Sovereign","Luminous","Transcendent","Whole","Sage","Master","Bodhisattva","Ascended","Enlightened"];
+    const CONF_TITLES = ["","Beginner","Showing Up","Stepping In","Steady","Solid","Anchored","Self-Trust","Composed","Magnetic","Unshakeable","Self-Sourced","Radiant","Sovereign","Embodied","Whole","Luminous","Iron Will","Quiet Power","Untouchable","Self-Made"];
+
+    const THRESHOLDS = [0,100,250,450,700,1000,1400,1900,2500,3200,4000,5000,6200,7600,9200,11000,13000,15500,18500,22000,26000];
+
+    // ============ STATE ============
+    let state = null;
+
+    const defaultState = {
+      wealthXp: 0, lifeXp: 0, confXp: 0,
+      streak: 0, lastActiveDate: null,
+      totalActions: 0,
+      tp: { industry:0, ai:0, network:0, finance:0, fitness:0, mind:0, nutrition:0, relationships:0 },
+      unlockedAchievements: [],
+      journalEntries: [],
+      actionLog: [],
+      weeklyTasksDone: [],
+      lastWeekReset: null,
+      dailyData: {}, // { "2025-01-15": { conf: {habitId:true,...}, life: {habitId:true,...}, wins: "..." } }
+      confTotalDays: 0,
+      confPerfectDays: 0,
+      winDaysCount: 0,
+    };
+
+    // ============ HELPERS ============
+    function todayKey() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    }
+    function yesterdayKey() {
+      const d = new Date(Date.now() - 86400000);
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    }
+    function fmtDate(k) {
+      const [y,m,d] = k.split("-");
+      return new Date(+y, +m-1, +d).toLocaleDateString("en-US", { weekday:"short", month:"short", day:"numeric" });
+    }
+    function currentWeekKey() {
+      const d = new Date();
+      const day = d.getDay();
+      const monday = new Date(d);
+      monday.setDate(d.getDate() - ((day + 6) % 7));
+      return monday.toDateString();
+    }
+    function calcLevel(xp) {
+      let lvl = 1;
+      for (let i = 1; i < THRESHOLDS.length; i++) {
+        if (xp >= THRESHOLDS[i]) lvl = i + 1; else break;
+      }
+      const cur = THRESHOLDS[Math.min(lvl-1, THRESHOLDS.length-1)];
+      const next = THRESHOLDS[Math.min(lvl, THRESHOLDS.length-1)];
+      const pct = next === cur ? 100 : ((xp - cur) / (next - cur)) * 100;
+      return { lvl, pct: Math.min(pct, 100), next };
+    }
+    function getDay(key) {
+      if (!state.dailyData[key]) state.dailyData[key] = { conf: {}, life: {}, wins: "" };
+      const d = state.dailyData[key];
+      if (!d.conf) d.conf = {};
+      if (!d.life) d.life = {};
+      if (d.wins === undefined) d.wins = "";
+      return d;
+    }
+    function habitStreak(pillar, habitId) {
+      let s = 0;
+      const d = new Date();
+      while (true) {
+        const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+        if (state.dailyData[k]?.[pillar]?.[habitId]) {
+          s++;
+          d.setDate(d.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+      return s;
+    }
+
+    // ============ STORAGE ============
+    function save() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+    }
+    function load() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const loaded = JSON.parse(raw);
+          state = { ...defaultState, ...loaded, tp: { ...defaultState.tp, ...(loaded.tp || {}) } };
+          // Backfill ids and dateKeys for old entries
+          let needsSave = false;
+          state.actionLog.forEach((log, i) => {
+            if (log.id === undefined) { log.id = Date.now() + i + Math.random(); needsSave = true; }
+            if (log.dateKey === undefined) { log.dateKey = "legacy"; needsSave = true; }
+          });
+          if (needsSave) save();
+          return;
+        }
+      } catch(e) {}
+      // Migrate from legacy confidence app
+      try {
+        const legacy = localStorage.getItem(LEGACY_CONFIDENCE_KEY);
+        if (legacy) {
+          const old = JSON.parse(legacy);
+          state = { ...defaultState };
+          if (old.history) {
+            for (const [k, v] of Object.entries(old.history)) {
+              state.dailyData[k] = { conf: v.habits || {}, life: {}, wins: v.wins || "" };
+            }
+            recalcConfStats();
+          }
+          save();
+          return;
+        }
+      } catch(e) {}
+      state = JSON.parse(JSON.stringify(defaultState));
+    }
+    function recalcConfStats() {
+      let total = 0, perfect = 0, winDays = 0;
+      for (const [k, v] of Object.entries(state.dailyData)) {
+        const conf = v.conf || {};
+        const completed = Object.values(conf).filter(Boolean).length;
+        if (completed > 0) total++;
+        if (completed === CONFIDENCE_HABITS.length) perfect++;
+        if (v.wins && v.wins.trim()) winDays++;
+      }
+      state.confTotalDays = total;
+      state.confPerfectDays = perfect;
+      state.winDaysCount = winDays;
+    }
+
+    // ============ UI ============
+    let activeTab = "hq";
+    let achFilter = "all";
+
+    function setTab(name) {
+      activeTab = name;
+      document.querySelectorAll(".nav button").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+      document.querySelectorAll(".tab-pane").forEach(p => p.classList.toggle("active", p.id === `tab-${name}`));
+      window.scrollTo({ top: 0, behavior: "instant" });
+      renderAll();
+    }
+
+    function showToast(msg, color = "var(--gold)") {
+      const t = document.createElement("div");
+      t.className = "toast";
+      t.style.borderColor = color;
+      t.style.color = color;
+      t.style.boxShadow = `0 0 24px ${color.includes("var") ? "rgba(232,192,104,0.3)" : color + "40"}`;
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 2500);
+    }
+
+    function updateStreak() {
+      const today = todayKey();
+      if (state.lastActiveDate === today) return;
+      state.streak = state.lastActiveDate === yesterdayKey() ? state.streak + 1 : 1;
+      state.lastActiveDate = today;
+    }
+
+    function checkAchievements() {
+      let unlocked = [];
+      for (const a of ACHIEVEMENTS) {
+        if (!state.unlockedAchievements.includes(a.id) && a.check(state)) {
+          unlocked.push(a);
+          state.unlockedAchievements.push(a.id);
+          if (a.xp > 0) {
+            if (a.pillar === "wealth") state.wealthXp += a.xp;
+            else if (a.pillar === "life") state.lifeXp += a.xp;
+            else if (a.pillar === "confidence") state.confXp += a.xp;
+            else {
+              state.wealthXp += a.xp / 3;
+              state.lifeXp += a.xp / 3;
+              state.confXp += a.xp / 3;
+            }
+          }
+        }
+      }
+      if (unlocked.length) {
+        setTimeout(() => {
+          showToast(`🏆 ${unlocked.map(a => a.name).join(", ")}`, "var(--purple)");
+        }, 500);
+      }
+    }
+
+    // ============ ACTIONS ============
+    function logAction(pillar, trackId, actionIdx) {
+      const tracks = pillar === "wealth" ? WEALTH_TRACKS : LIFE_TRACKS;
+      const track = tracks.find(t => t.id === trackId);
+      updateStreak();
+      if (pillar === "wealth") state.wealthXp += track.xp;
+      else state.lifeXp += track.xp;
+      state.totalActions++;
+      if (trackId !== "finance") state.tp[trackId]++;
+      state.actionLog.unshift({
+        id: Date.now() + Math.random(),
+        pillar,
+        track: trackId,
+        action: track.actions[actionIdx],
+        date: new Date().toLocaleDateString(),
+        dateKey: todayKey(),
+        xp: track.xp
+      });
+      if (state.actionLog.length > 100) state.actionLog = state.actionLog.slice(0, 100);
+      checkAchievements();
+      save();
+      renderAll();
+      showToast(`+${track.xp} ${pillar.toUpperCase()} XP`, track.color);
+    }
+
+    function toggleHabit(pillar, habitId) {
+      const today = todayKey();
+      const day = getDay(today);
+      const habits = pillar === "confidence" ? CONFIDENCE_HABITS : LIFESTYLE_HABITS;
+      const habit = habits.find(h => h.id === habitId);
+      const wasChecked = !!day[pillar === "confidence" ? "conf" : "life"][habitId];
+
+      if (wasChecked) {
+        day[pillar === "confidence" ? "conf" : "life"][habitId] = false;
+        if (pillar === "confidence") state.confXp = Math.max(0, state.confXp - habit.xp);
+        else state.lifeXp = Math.max(0, state.lifeXp - habit.xp);
+        state.totalActions = Math.max(0, state.totalActions - 1);
+      } else {
+        day[pillar === "confidence" ? "conf" : "life"][habitId] = true;
+        if (pillar === "confidence") state.confXp += habit.xp;
+        else state.lifeXp += habit.xp;
+        state.totalActions++;
+        updateStreak();
+      }
+      recalcConfStats();
+      checkAchievements();
+      save();
+      renderAll();
+      if (!wasChecked) {
+        const c = pillar === "confidence" ? "var(--sage)" : "var(--mint)";
+        showToast(`+${habit.xp} ${pillar === "confidence" ? "SELF" : "LIFE"} XP`, c);
+      }
+    }
+
+    function saveWins() {
+      const today = todayKey();
+      const day = getDay(today);
+      const winsText = document.getElementById("winsInput").value.trim();
+      const hadWins = !!day.wins;
+      day.wins = winsText;
+      if (winsText && !hadWins) {
+        state.confXp += 25;
+        state.totalActions++;
+        updateStreak();
+      }
+      recalcConfStats();
+      checkAchievements();
+      save();
+      renderAll();
+      const btn = document.getElementById("saveWinsBtn");
+      btn.textContent = "✓ SAVED";
+      btn.classList.add("saved");
+      setTimeout(() => {
+        btn.textContent = "SAVE WINS · +25 XP";
+        btn.classList.remove("saved");
+      }, 1800);
+      if (winsText && !hadWins) showToast("+25 SELF XP — Wins logged ✨", "var(--sage)");
+    }
+
+    function logJournal() {
+      const text = document.getElementById("journalInput").value.trim();
+      if (!text) return;
+      state.journalEntries.unshift({ id: Date.now(), text, date: new Date().toLocaleDateString() });
+      state.wealthXp += 25;
+      state.totalActions++;
+      updateStreak();
+      checkAchievements();
+      save();
+      document.getElementById("journalInput").value = "";
+      renderAll();
+      showToast("+25 WEALTH XP — Observation logged 📓", "var(--gold)");
+    }
+
+    function toggleQuest(qId) {
+      const q = WEEKLY_QUESTS.find(t => t.id === qId);
+      const idx = state.weeklyTasksDone.indexOf(qId);
+      if (idx >= 0) {
+        // Undo
+        state.weeklyTasksDone.splice(idx, 1);
+        if (q.pillar === "wealth") state.wealthXp = Math.max(0, state.wealthXp - q.xp);
+        else if (q.pillar === "life") state.lifeXp = Math.max(0, state.lifeXp - q.xp);
+        else state.confXp = Math.max(0, state.confXp - q.xp);
+        state.totalActions = Math.max(0, state.totalActions - 1);
+        save();
+        renderAll();
+        showToast(`Undone · -${q.xp} XP`, "var(--red)");
+      } else {
+        state.weeklyTasksDone.push(qId);
+        if (q.pillar === "wealth") state.wealthXp += q.xp;
+        else if (q.pillar === "life") state.lifeXp += q.xp;
+        else state.confXp += q.xp;
+        state.totalActions++;
+        updateStreak();
+        checkAchievements();
+        save();
+        renderAll();
+        showToast(`+${q.xp} ${q.pillar.toUpperCase()} XP ✅`, q.color);
+      }
+    }
+
+    function unlogAction(logId) {
+      const idx = state.actionLog.findIndex(l => l.id == logId);
+      if (idx < 0) return;
+      const log = state.actionLog[idx];
+      if (log.pillar === "wealth") state.wealthXp = Math.max(0, state.wealthXp - log.xp);
+      else state.lifeXp = Math.max(0, state.lifeXp - log.xp);
+      state.totalActions = Math.max(0, state.totalActions - 1);
+      if (log.track !== "finance") state.tp[log.track] = Math.max(0, state.tp[log.track] - 1);
+      state.actionLog.splice(idx, 1);
+      save();
+      renderAll();
+      showToast(`Undone · -${log.xp} XP`, "var(--red)");
+    }
+
+    function deleteJournal(id) {
+      if (!confirm("Delete this observation?")) return;
+      state.journalEntries = state.journalEntries.filter(e => e.id !== id);
+      save();
+      renderAll();
+    }
+
+    function updateFinance() {
+      const inp = document.getElementById("financeInput");
+      const val = parseInt(inp.value.replace(/[^0-9]/g, ""));
+      if (!val || val < 0) return;
+      state.tp.finance = val;
+      state.wealthXp += 50;
+      state.totalActions++;
+      updateStreak();
+      checkAchievements();
+      save();
+      inp.value = "";
+      renderAll();
+      showToast(`Runway: $${val.toLocaleString()} 💰`, "var(--green)");
+    }
+
+    // ============ RENDER ============
+    function renderHQ() {
+      document.getElementById("dateLabel").textContent = new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
+
+      // Pillar row
+      const w = calcLevel(state.wealthXp);
+      const l = calcLevel(state.lifeXp);
+      const c = calcLevel(state.confXp);
+      const pillarHtml = [
+        { name:"WEALTH", lvl:w, xp:state.wealthXp, titles:WEALTH_TITLES, cls:"gold" },
+        { name:"LIFE",   lvl:l, xp:state.lifeXp,   titles:LIFE_TITLES,   cls:"mint" },
+        { name:"SELF",   lvl:c, xp:state.confXp,   titles:CONF_TITLES,   cls:"sage" },
+      ].map(p => `
+        <div class="level-card ${p.cls}">
+          <div class="glow"></div>
+          <div class="label">${p.name}</div>
+          <div class="level-num">LVL ${p.lvl.lvl}</div>
+          <div class="level-title">${p.titles[Math.min(p.lvl.lvl, 20)]}</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${p.lvl.pct}%"></div></div>
+          <div class="xp-text">${p.xp.toLocaleString()} XP</div>
+        </div>
+      `).join("");
+      document.getElementById("pillarRow").innerHTML = pillarHtml;
+
+      // Today's data for stats summary
+      const today = todayKey();
+      const day = getDay(today);
+
+      // Weekly quests
+      document.getElementById("weeklyQuests").innerHTML = WEEKLY_QUESTS.map(q => {
+        const done = state.weeklyTasksDone.includes(q.id);
+        return `
+          <div class="quest ${done?"done":""}" onclick="toggleQuest('${q.id}')">
+            <div class="ring" style="${done?"":"border-color:"+q.color+"60"}">${done?"✓":""}</div>
+            <div class="body">
+              <div class="text">${q.text}</div>
+              <div class="pillar" style="color:${q.color}">${q.pillar.toUpperCase()} · +${q.xp}${done?" · tap to undo":""}</div>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      // Recent
+      if (state.actionLog.length > 0) {
+        document.getElementById("recentActivityCard").style.display = "block";
+        document.getElementById("recentActivity").innerHTML = state.actionLog.slice(0, 6).map((log) => {
+          const tracks = log.pillar === "wealth" ? WEALTH_TRACKS : LIFE_TRACKS;
+          const tr = tracks.find(t => t.id === log.track);
+          return `
+            <div class="activity-item">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:12px;color:var(--text);">${log.action}</div>
+                <div class="meta">${tr?.icon || ""} ${log.date}</div>
+              </div>
+              <div class="xp" style="color:${tr?.color}">+${log.xp}</div>
+              <button onclick="unlogAction('${log.id}')" style="background:none;border:none;color:var(--text-dim);font-size:16px;margin-left:8px;cursor:pointer;padding:4px 6px;line-height:1;" aria-label="Undo">×</button>
+            </div>
+          `;
+        }).join("");
+      } else {
+        document.getElementById("recentActivityCard").style.display = "none";
+      }
+    }
+
+    function renderTracks(tracks, pillar, containerId) {
+      const container = document.getElementById(containerId);
+      const tk = todayKey();
+      container.innerHTML = tracks.map(t => {
+        const val = state.tp[t.id] || 0;
+        const pct = Math.min((val / t.target) * 100, 100);
+        const display = t.id === "finance" ? `$${val.toLocaleString()}` : val;
+        const tgt = t.id === "finance" ? `$${t.target.toLocaleString()}` : t.target;
+        const todayLogs = state.actionLog.filter(l => l.dateKey === tk && l.track === t.id && l.pillar === pillar);
+        return `
+          <div class="track-card">
+            <div class="track-head">
+              <div style="flex:1;min-width:0;">
+                <div class="track-name" style="color:${t.color}">${t.icon} ${t.name}</div>
+                <div class="track-sub">${t.subtitle}</div>
+              </div>
+              <div>
+                <div class="track-num" style="color:${t.color}">${display}</div>
+                <div class="track-target">/ ${tgt} ${t.unit}</div>
+              </div>
+            </div>
+            <div class="track-progress"><div class="track-progress-fill" style="width:${pct}%;background:${t.color}"></div></div>
+            ${t.id === "finance" ? `
+              <div class="finance-input-row">
+                <input type="number" id="financeInput" placeholder="Update savings total ($)" />
+                <button onclick="updateFinance()">SET</button>
+              </div>
+            ` : ""}
+            ${todayLogs.length > 0 ? `
+              <div class="today-log">
+                <div class="today-log-header">TODAY · ${todayLogs.length} LOGGED</div>
+                ${todayLogs.map(a => `
+                  <div class="today-log-item">
+                    <span class="today-log-text">✓ ${a.action}</span>
+                    <span class="today-log-xp" style="color:${t.color}">+${a.xp}</span>
+                    <button class="today-log-undo" onclick="unlogAction('${a.id}')" aria-label="Undo">×</button>
+                  </div>
+                `).join("")}
+              </div>
+            ` : ""}
+            <div class="track-actions">
+              ${t.actions.map((a,i)=>`
+                <button class="action-btn" onclick="logAction('${pillar}','${t.id}',${i})">
+                  <span>+ ${a}</span>
+                  <span class="xp-badge" style="color:${t.color}">+${t.xp}</span>
+                </button>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderWealth() {
+      const w = calcLevel(state.wealthXp);
+      document.getElementById("wealthLvlNum").textContent = `LVL ${w.lvl}`;
+      document.getElementById("wealthLvlTitle").textContent = WEALTH_TITLES[Math.min(w.lvl, 20)];
+      document.getElementById("wealthLvlBar").style.width = `${w.pct}%`;
+      document.getElementById("wealthLvlXp").textContent = `${state.wealthXp.toLocaleString()} / ${w.next.toLocaleString()} XP`;
+      renderTracks(WEALTH_TRACKS, "wealth", "wealthTracks");
+      const je = document.getElementById("journalEntries");
+      if (state.journalEntries.length === 0) {
+        je.innerHTML = `<p class="empty">No observations yet. Start logging what you see.</p>`;
+      } else {
+        je.innerHTML = state.journalEntries.map((e, i) => `
+          <div class="history-item" style="position:relative;">
+            <button onclick="deleteJournal(${e.id})" style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--text-dim);font-size:16px;cursor:pointer;padding:4px 8px;line-height:1;" aria-label="Delete">×</button>
+            <div style="font-size:12.5px;color:var(--text);line-height:1.6;margin-bottom:6px;padding-right:20px;">${e.text.replace(/</g,"&lt;")}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);">#${state.journalEntries.length - i} · ${e.date}</div>
+          </div>
+        `).join("");
+      }
+    }
+
+    function renderLife() {
+      const l = calcLevel(state.lifeXp);
+      document.getElementById("lifeLvlNum").textContent = `LVL ${l.lvl}`;
+      document.getElementById("lifeLvlTitle").textContent = LIFE_TITLES[Math.min(l.lvl, 20)];
+      document.getElementById("lifeLvlBar").style.width = `${l.pct}%`;
+      document.getElementById("lifeLvlXp").textContent = `${state.lifeXp.toLocaleString()} / ${l.next.toLocaleString()} XP`;
+
+      const today = todayKey();
+      const day = getDay(today);
+      const done = Object.values(day.life).filter(Boolean).length;
+      document.getElementById("lifeTodayStats").textContent = `${done}/${LIFESTYLE_HABITS.length}${done === LIFESTYLE_HABITS.length ? " ✨" : ""}`;
+      document.getElementById("lifeHabits").innerHTML = LIFESTYLE_HABITS.map(h => {
+        const checked = !!day.life[h.id];
+        const streak = checked ? habitStreak("life", h.id) : 0;
+        return `
+          <div class="habit-card life ${checked ? "checked" : ""}" onclick="toggleHabit('life','${h.id}')">
+            <div class="habit-icon">${h.icon}</div>
+            <div class="habit-info">
+              <div class="habit-title">${h.name}</div>
+              <div class="habit-desc">${h.desc}</div>
+              ${streak > 1 ? `<div class="habit-streak">🔥 ${streak}d</div>` : ""}
+            </div>
+            <div class="check-ring">${checked ? "✓" : ""}</div>
+          </div>
+        `;
+      }).join("");
+
+      renderTracks(LIFE_TRACKS, "life", "lifeTracks");
+    }
+
+    function renderConfidence() {
+      const c = calcLevel(state.confXp);
+      document.getElementById("confLvlNum").textContent = `LVL ${c.lvl}`;
+      document.getElementById("confLvlTitle").textContent = CONF_TITLES[Math.min(c.lvl, 20)];
+      document.getElementById("confLvlBar").style.width = `${c.pct}%`;
+      document.getElementById("confLvlXp").textContent = `${state.confXp.toLocaleString()} / ${c.next.toLocaleString()} XP`;
+
+      const today = todayKey();
+      const day = getDay(today);
+      const done = Object.values(day.conf).filter(Boolean).length;
+      document.getElementById("confTodayStats").textContent = `${done}/${CONFIDENCE_HABITS.length}${done === CONFIDENCE_HABITS.length ? " ✨" : ""}`;
+      document.getElementById("confidenceHabits").innerHTML = CONFIDENCE_HABITS.map(h => {
+        const checked = !!day.conf[h.id];
+        const streak = checked ? habitStreak("conf", h.id) : 0;
+        return `
+          <div class="habit-card ${checked?"checked":""}" onclick="toggleHabit('confidence','${h.id}')">
+            <div class="habit-icon">${h.icon}</div>
+            <div class="habit-info">
+              <div class="habit-title">${h.name}</div>
+              <div class="habit-desc">${h.desc}</div>
+              ${streak > 1 ? `<div class="habit-streak">🔥 ${streak}d</div>` : ""}
+            </div>
+            <div class="check-ring">${checked?"✓":""}</div>
+          </div>
+        `;
+      }).join("");
+
+      document.getElementById("winsInput").value = day.wins || "";
+    }
+
+    let historyOpen = false;
+    function toggleHistory() {
+      historyOpen = !historyOpen;
+      const el = document.getElementById("historyList");
+      el.style.display = historyOpen ? "block" : "none";
+      if (!historyOpen) return;
+      const keys = Object.keys(state.dailyData).sort().reverse().filter(k => k !== todayKey()).slice(0, 14);
+      if (!keys.length) {
+        el.innerHTML = `<p class="empty">No past days yet!</p>`;
+        return;
+      }
+      el.innerHTML = keys.map(k => {
+        const day = state.dailyData[k];
+        const dots = CONFIDENCE_HABITS.map(h => `<div class="history-dot ${day.conf?.[h.id]?"done":""}"></div>`).join("");
+        return `
+          <div class="history-item">
+            <div class="history-date">${fmtDate(k)}</div>
+            <div class="history-dots">${dots}</div>
+            ${day.wins ? `<div class="history-wins">${day.wins.replace(/</g,"&lt;")}</div>` : ""}
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderTrophies() {
+      const filter = achFilter;
+      const list = filter === "all" ? ACHIEVEMENTS : ACHIEVEMENTS.filter(a => a.pillar === filter);
+      const unlocked = state.unlockedAchievements.length;
+      document.getElementById("achCounter").textContent = `${unlocked} / ${ACHIEVEMENTS.length} UNLOCKED`;
+      document.getElementById("achGrid").innerHTML = list.map(a => {
+        const ok = state.unlockedAchievements.includes(a.id);
+        return `
+          <div class="ach-card ${a.pillar} ${ok?"unlocked":""}">
+            <div class="icon">${ok ? a.icon : "🔒"}</div>
+            <div class="name">${a.name}</div>
+            <div class="desc">${a.desc}</div>
+            ${a.xp > 0 ? `<div class="xp">+${a.xp} XP</div>` : ""}
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderHeader() {
+      document.getElementById("hStreak").textContent = state.streak;
+      document.getElementById("hTrophies").textContent = state.unlockedAchievements.length;
+    }
+
+    function renderAll() {
+      renderHeader();
+      if (activeTab === "hq") renderHQ();
+      else if (activeTab === "wealth") renderWealth();
+      else if (activeTab === "life") renderLife();
+      else if (activeTab === "confidence") renderConfidence();
+      else if (activeTab === "trophies") renderTrophies();
+    }
+
+    // ============ SETTINGS / BACKUP ============
+    function openSettings() {
+      document.getElementById("settingsModal").classList.add("open");
+    }
+    function closeSettings() {
+      document.getElementById("settingsModal").classList.remove("open");
+      document.getElementById("backupBox").value = "";
+      document.getElementById("backupStatus").textContent = "";
+    }
+    function showBackupStatus(msg, err = false) {
+      const el = document.getElementById("backupStatus");
+      el.textContent = msg;
+      el.classList.toggle("error", err);
+      setTimeout(() => { el.textContent = ""; el.classList.remove("error"); }, 4000);
+    }
+    function exportData() {
+      const text = JSON.stringify(state, null, 2);
+      document.getElementById("backupBox").value = text;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(
+          () => showBackupStatus("✓ Copied to clipboard! Save it somewhere safe."),
+          () => showBackupStatus("✓ Exported below — long-press to copy.")
+        );
+      } else {
+        showBackupStatus("✓ Exported below — long-press to copy.");
+      }
+    }
+    function importData() {
+      const text = document.getElementById("backupBox").value.trim();
+      if (!text) { showBackupStatus("Paste your backup text first.", true); return; }
+      let parsed;
+      try {
+        parsed = JSON.parse(text);
+      } catch(e) {
+        showBackupStatus("Couldn't read that backup — invalid JSON.", true);
+        return;
+      }
+      if (typeof parsed !== "object" || parsed === null) {
+        showBackupStatus("Backup format not recognized.", true);
+        return;
+      }
+      if (!confirm("This will replace ALL your current data. Continue?")) return;
+      try {
+        state = {
+          ...defaultState,
+          ...parsed,
+          tp: { ...defaultState.tp, ...(parsed.tp || {}) },
+          dailyData: parsed.dailyData || {},
+          journalEntries: parsed.journalEntries || [],
+          actionLog: parsed.actionLog || [],
+          unlockedAchievements: parsed.unlockedAchievements || [],
+          weeklyTasksDone: parsed.weeklyTasksDone || [],
+        };
+        recalcConfStats();
+        save();
+        // Clear any open inputs that might be stale
+        const winsEl = document.getElementById("winsInput");
+        const journalEl = document.getElementById("journalInput");
+        if (winsEl) winsEl.value = "";
+        if (journalEl) journalEl.value = "";
+        renderAll();
+        showBackupStatus("✓ Restored! Closing in 2s...");
+        setTimeout(() => closeSettings(), 2000);
+      } catch(e) {
+        showBackupStatus("Restore failed: " + e.message, true);
+      }
+    }
+    function resetAll() {
+      if (!confirm("⚠ This will permanently delete ALL your progress.\n\nMake sure you've exported a backup first!\n\nContinue?")) return;
+      const typed = prompt('Type "RESET" (in caps) to confirm permanent deletion:');
+      if (typed !== "RESET") {
+        showBackupStatus("Reset cancelled — you didn't type RESET.", true);
+        return;
+      }
+      state = JSON.parse(JSON.stringify(defaultState));
+      save();
+      closeSettings();
+      renderAll();
+      showToast("All data reset", "var(--red)");
+    }
+
+    // ============ INIT ============
+    function init() {
+      load();
+
+      // Weekly reset check
+      const wk = currentWeekKey();
+      if (state.lastWeekReset !== wk) {
+        state.weeklyTasksDone = [];
+        state.lastWeekReset = wk;
+        save();
+      }
+
+      // Nav handlers
+      document.querySelectorAll(".nav button").forEach(b => {
+        b.addEventListener("click", () => setTab(b.dataset.tab));
+      });
+
+      // Achievement filter
+      document.querySelectorAll("#achFilter button").forEach(b => {
+        b.addEventListener("click", () => {
+          achFilter = b.dataset.filter;
+          document.querySelectorAll("#achFilter button").forEach(x => x.classList.toggle("active", x === b));
+          renderTrophies();
+        });
+      });
+
+      renderAll();
+    }
+
+    init();
+
+    // Register service worker for offline support (only works when hosted, not file://)
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {
+          // Silent fail - SW is optional
+        });
+      });
+    }
+  </script>
+
+</body>
+</html>
