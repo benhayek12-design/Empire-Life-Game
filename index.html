@@ -1396,6 +1396,31 @@
 
     function checkAchievements() {
       let unlocked = [];
+      // First: lock back any achievements whose condition is no longer met
+      const stillValid = [];
+      for (const id of state.unlockedAchievements) {
+        const a = ACHIEVEMENTS.find(x => x.id === id);
+        if (!a) continue;
+        if (a.check(state)) {
+          stillValid.push(id);
+        } else {
+          // Refund the bonus XP
+          if (a.xp > 0) {
+            if (a.pillar === "wealth") state.wealthXp = Math.max(0, state.wealthXp - a.xp);
+            else if (a.pillar === "life") state.lifeXp = Math.max(0, state.lifeXp - a.xp);
+            else if (a.pillar === "confidence") state.confXp = Math.max(0, state.confXp - a.xp);
+            else {
+              const third = a.xp / 3;
+              state.wealthXp = Math.max(0, state.wealthXp - third);
+              state.lifeXp = Math.max(0, state.lifeXp - third);
+              state.confXp = Math.max(0, state.confXp - third);
+            }
+          }
+        }
+      }
+      state.unlockedAchievements = stillValid;
+
+      // Then: unlock any newly satisfied achievements
       for (const a of ACHIEVEMENTS) {
         if (!state.unlockedAchievements.includes(a.id) && a.check(state)) {
           unlocked.push(a);
@@ -1470,6 +1495,8 @@
       if (!wasChecked) {
         const c = pillar === "confidence" ? "var(--sage)" : "var(--mint)";
         showToast(`+${habit.xp} ${pillar === "confidence" ? "SELF" : "LIFE"} XP`, c);
+      } else {
+        showToast(`Undone · -${habit.xp} XP`, "var(--red)");
       }
     }
 
@@ -1478,11 +1505,20 @@
       const day = getDay(today);
       const winsText = document.getElementById("winsInput").value.trim();
       const hadWins = !!day.wins;
+      const hasWins = !!winsText;
       day.wins = winsText;
-      if (winsText && !hadWins) {
+
+      let xpDelta = 0;
+      if (hasWins && !hadWins) {
         state.confXp += 25;
         state.totalActions++;
         updateStreak();
+        xpDelta = 25;
+      } else if (!hasWins && hadWins) {
+        // Cleared — refund
+        state.confXp = Math.max(0, state.confXp - 25);
+        state.totalActions = Math.max(0, state.totalActions - 1);
+        xpDelta = -25;
       }
       recalcConfStats();
       checkAchievements();
@@ -1495,7 +1531,8 @@
         btn.textContent = "SAVE WINS · +25 XP";
         btn.classList.remove("saved");
       }, 1800);
-      if (winsText && !hadWins) showToast("+25 SELF XP — Wins logged ✨", "var(--sage)");
+      if (xpDelta > 0) showToast("+25 SELF XP — Wins logged ✨", "var(--sage)");
+      else if (xpDelta < 0) showToast("Wins cleared · -25 XP", "var(--red)");
     }
 
     function logJournal() {
@@ -1522,6 +1559,7 @@
         else if (q.pillar === "life") state.lifeXp = Math.max(0, state.lifeXp - q.xp);
         else state.confXp = Math.max(0, state.confXp - q.xp);
         state.totalActions = Math.max(0, state.totalActions - 1);
+        checkAchievements();
         save();
         renderAll();
         showToast(`Undone · -${q.xp} XP`, "var(--red)");
@@ -1548,16 +1586,24 @@
       state.totalActions = Math.max(0, state.totalActions - 1);
       if (log.track !== "finance") state.tp[log.track] = Math.max(0, state.tp[log.track] - 1);
       state.actionLog.splice(idx, 1);
+      checkAchievements();
       save();
       renderAll();
       showToast(`Undone · -${log.xp} XP`, "var(--red)");
     }
 
     function deleteJournal(id) {
-      if (!confirm("Delete this observation?")) return;
+      if (!confirm("Delete this observation? -25 XP")) return;
+      const existed = state.journalEntries.some(e => e.id === id);
       state.journalEntries = state.journalEntries.filter(e => e.id !== id);
+      if (existed) {
+        state.wealthXp = Math.max(0, state.wealthXp - 25);
+        state.totalActions = Math.max(0, state.totalActions - 1);
+      }
+      checkAchievements();
       save();
       renderAll();
+      showToast("Observation removed · -25 XP", "var(--red)");
     }
 
     function updateFinance() {
