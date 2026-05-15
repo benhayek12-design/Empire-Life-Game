@@ -378,7 +378,64 @@
       border-radius: 4px;
       transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1);
     }
-    .track-actions { display: flex; flex-direction: column; gap: 5px; }
+    .track-actions { display: flex; flex-direction: column; gap: 7px; }
+
+    /* Action cards — match habit-card visual style */
+    .action-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 13px 14px;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+      color: var(--text);
+      font-family: inherit;
+      transition: all 0.18s;
+      -webkit-appearance: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .action-card:active {
+      transform: scale(0.985);
+      background: var(--surface-hi);
+      border-color: var(--border-hi);
+    }
+    .action-card .action-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+      width: 28px;
+      text-align: center;
+      opacity: 0.85;
+    }
+    .action-card .action-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .action-card .action-title {
+      font-size: 13.5px;
+      font-weight: 500;
+      line-height: 1.25;
+      color: var(--text);
+    }
+    .action-card .action-desc {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-top: 2px;
+    }
+    .action-card .action-xp {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      flex-shrink: 0;
+      margin-left: 6px;
+      min-width: 32px;
+      text-align: right;
+    }
 
     /* Today's logged actions inside a track */
     .today-log {
@@ -427,29 +484,6 @@
       flex-shrink: 0;
     }
     .today-log-undo:active { transform: scale(0.85); }
-    .action-btn {
-      background: rgba(255,255,255,0.025);
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      color: var(--text);
-      padding: 9px 12px;
-      text-align: left;
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 13px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      transition: all 0.15s;
-      -webkit-appearance: none;
-    }
-    .action-btn:active { transform: scale(0.98); background: rgba(255,255,255,0.06); }
-    .action-btn .xp-badge {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 10px;
-      margin-left: 8px;
-      flex-shrink: 0;
-    }
 
     .finance-input-row { display: flex; gap: 6px; margin-bottom: 12px; }
     .finance-input-row input {
@@ -501,6 +535,10 @@
       background: rgba(125,211,192,0.07);
       border-color: rgba(125,211,192,0.32);
     }
+    .habit-card.wealth.checked {
+      background: rgba(232,192,104,0.07);
+      border-color: rgba(232,192,104,0.32);
+    }
     .habit-icon {
       font-size: 20px;
       flex-shrink: 0;
@@ -520,6 +558,7 @@
       text-decoration-color: rgba(192,232,160,0.4);
     }
     .habit-card.life.checked .habit-title { color: var(--mint-light); text-decoration-color: rgba(168,230,216,0.4); }
+    .habit-card.wealth.checked .habit-title { color: var(--gold-light); text-decoration-color: rgba(245,217,138,0.4); }
     .habit-desc {
       font-size: 11.5px;
       color: var(--text-muted);
@@ -551,6 +590,7 @@
       color: #0a1306;
     }
     .habit-card.life.checked .check-ring { background: var(--mint); border-color: var(--mint); }
+    .habit-card.wealth.checked .check-ring { background: var(--gold); border-color: var(--gold); color: #1a1208; }
 
     /* Lifestyle habits grid for HQ */
     .habits-grid {
@@ -1009,6 +1049,15 @@
 
     <div class="card">
       <div class="card-title">
+        <span>DAILY HABITS</span>
+        <span id="wealthTodayStats" style="color:var(--gold);font-family:'IBM Plex Mono',monospace;font-size:11px;"></span>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;font-family:'Playfair Display',serif;font-style:italic;">Seven daily practices. Compound the right inputs.</p>
+      <div id="wealthHabits"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
         <span>TRACK PROGRESS</span>
       </div>
       <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;font-family:'Playfair Display',serif;font-style:italic;">Log every action. Small moves compound into everything.</p>
@@ -1139,31 +1188,79 @@
     const WEALTH_TRACKS = [
       { id:"industry", icon:"🏢", name:"Industry Exposure", subtitle:"Get inside wealth management",
         color:"var(--gold)", target:12, unit:"months", xp:40,
-        actions:["Applied to analyst/associate role","Logged a broken process","Shadowed or interviewed a pro","Read a fintech industry report","Attended a finance/fintech event"] },
+        actions:[
+          { name:"Applied to analyst/associate role", desc:"Submitted a real application — one click in, count it." },
+          { name:"Logged a broken process",           desc:"Spotted something manual or slow that AI could fix." },
+          { name:"Shadowed or interviewed a pro",     desc:"30+ min conversation about how they actually work." },
+          { name:"Read a fintech industry report",    desc:"Earnings call, market analysis, or research piece." },
+          { name:"Attended a finance/fintech event",  desc:"Meetup, conference, demo day — anywhere people gather." },
+        ] },
       { id:"ai", icon:"🤖", name:"AI Fluency", subtitle:"Master AI tools without coding",
         color:"var(--cyan)", target:100, unit:"hrs", xp:30,
-        actions:["Practiced prompt engineering (1hr)","Built something with no-code","Explored a fintech API","Tested AI on a financial use case","Followed a new AI/fintech founder"] },
+        actions:[
+          { name:"Practiced prompt engineering (1hr)", desc:"Deliberate practice getting AI to do useful things." },
+          { name:"Built something with no-code",       desc:"Bubble, Cursor, Zapier, Replit — anything shipping." },
+          { name:"Explored a fintech API",             desc:"Plaid, Polygon, Morningstar — see what's possible." },
+          { name:"Tested AI on a financial use case",  desc:"Real-world experiment: research, analysis, automation." },
+          { name:"Followed a new AI/fintech founder",  desc:"Add a strong voice to your daily feed." },
+        ] },
       { id:"network", icon:"🤝", name:"Network Building", subtitle:"50 conversations this year",
         color:"var(--purple)", target:50, unit:"convos", xp:75,
-        actions:["Sent a cold LinkedIn message","Had a 20-min industry call","Met someone at an event","Got an intro from a contact","Added a potential co-founder"] },
+        actions:[
+          { name:"Sent a cold LinkedIn message",  desc:"20-min ask, no pitch, just curiosity." },
+          { name:"Had a 20-min industry call",    desc:"Voice or video — not just text exchange." },
+          { name:"Met someone at an event",       desc:"Got a name and a follow-up plan." },
+          { name:"Got an intro from a contact",   desc:"Warm intros compound the fastest." },
+          { name:"Added a potential co-founder",  desc:"Someone you could imagine building with." },
+        ] },
       { id:"finance", icon:"💰", name:"Financial Foundation", subtitle:"Build $40K founder runway",
         color:"var(--green)", target:40000, unit:"$", xp:50,
-        actions:["Maxed Roth IRA contribution","Hit 401k match","Saved 30%+ of paycheck","Invested a windfall/bonus","Cut a major expense"] },
+        actions:[
+          { name:"Maxed Roth IRA contribution", desc:"Tax-free growth compounding for decades." },
+          { name:"Hit 401k match",              desc:"Free money — never leave this on the table." },
+          { name:"Saved 30%+ of paycheck",      desc:"Pay yourself first, before anything else." },
+          { name:"Invested a windfall/bonus",   desc:"Don't lifestyle-inflate. Compound it." },
+          { name:"Cut a major expense",         desc:"Reduced a fixed cost — recurring savings." },
+        ] },
     ];
 
     const LIFE_TRACKS = [
       { id:"fitness", icon:"💪", name:"Fitness", subtitle:"Strong body, strong mind",
         color:"var(--rose)", target:200, unit:"sessions", xp:40,
-        actions:["Hit the gym (lifting)","Active day (walk/run/sport)","New PR or progression","Stretching / mobility","Full rest & recovery"] },
+        actions:[
+          { name:"Hit the gym (lifting)",     desc:"Real session — progressive overload, not just showing up." },
+          { name:"Active day (walk/run/sport)", desc:"30+ min of intentional movement." },
+          { name:"New PR or progression",     desc:"Heavier, longer, faster — track your wins." },
+          { name:"Stretching / mobility",     desc:"Future-you will thank you." },
+          { name:"Full rest & recovery",      desc:"Off days are part of the program." },
+        ] },
       { id:"mind", icon:"🧘", name:"Mind", subtitle:"Mental clarity & growth",
         color:"var(--purple)", target:365, unit:"sessions", xp:30,
-        actions:["10-min meditation","Journal entry","Read 30+ min non-fiction","Therapy / coaching","Digital detox (1+ hr)"] },
+        actions:[
+          { name:"10-min meditation",         desc:"Sit with yourself. No agenda." },
+          { name:"Journal entry",             desc:"Pen to paper — clear the noise." },
+          { name:"Read 30+ min non-fiction",  desc:"Compounding knowledge." },
+          { name:"Therapy / coaching",        desc:"Inner work. The highest-leverage move." },
+          { name:"Digital detox (1+ hr)",     desc:"Break the dopamine loop." },
+        ] },
       { id:"nutrition", icon:"🍳", name:"Nutrition", subtitle:"Fuel the machine",
         color:"var(--green)", target:250, unit:"meals", xp:25,
-        actions:["Cooked a real meal","Hit protein goal","No junk food day","Meal prepped for week","Hit hydration target"] },
+        actions:[
+          { name:"Cooked a real meal",   desc:"Made it yourself with real ingredients." },
+          { name:"Hit protein goal",     desc:"Bodyweight × 0.8g+ for the win." },
+          { name:"No junk food day",     desc:"Won the day, didn't crash." },
+          { name:"Meal prepped for week", desc:"Eliminate decisions, save time." },
+          { name:"Hit hydration target", desc:"Half your bodyweight in oz of water." },
+        ] },
       { id:"relationships", icon:"❤️", name:"Relationships", subtitle:"Wealth without people is poverty",
         color:"var(--orange)", target:100, unit:"moments", xp:50,
-        actions:["Called family member","Quality time with friend","Date / romantic time","Sent thoughtful message","Deep conversation"] },
+        actions:[
+          { name:"Called family member",   desc:"A real voice call beats any text." },
+          { name:"Quality time with friend", desc:"Phone away. Actually present." },
+          { name:"Date / romantic time",   desc:"Invest in the people closest to you." },
+          { name:"Sent thoughtful message", desc:"Reached out for no reason but care." },
+          { name:"Deep conversation",      desc:"Beyond small talk — went somewhere real." },
+        ] },
     ];
 
     // Lifestyle habits (daily)
@@ -1176,6 +1273,17 @@
       { id:"l_sleep",    icon:"😴", name:"8hr sleep",                     desc:"Non-negotiable. Sleep is the multiplier.",                xp:15 },
       { id:"l_nophone",  icon:"📵", name:"No phone first hour",           desc:"Own the start of your day.",                              xp:10 },
       { id:"l_cold",     icon:"🚿", name:"Cold shower / morning routine", desc:"A small act of voluntary discomfort.",                    xp:10 },
+    ];
+
+    // Wealth habits (daily wealth-building discipline)
+    const WEALTH_HABITS = [
+      { id:"w_news",     icon:"📰", name:"Industry news",          desc:"5–15 min staying current on finance, AI, fintech.",  xp:15 },
+      { id:"w_move",     icon:"💼", name:"One career/network move", desc:"Send a message, apply, follow up, ask.",            xp:15 },
+      { id:"w_ai",       icon:"🤖", name:"AI / tool practice",     desc:"15+ min building or learning with AI.",              xp:15 },
+      { id:"w_capture",  icon:"💡", name:"Capture an idea",        desc:"Note an observation or problem worth solving.",      xp:10 },
+      { id:"w_money",    icon:"💸", name:"Mindful spending",       desc:"No impulse buys today. Every dollar intentional.",   xp:10 },
+      { id:"w_priority", icon:"🎯", name:"Set tomorrow's #1",      desc:"Decide your one must-do for tomorrow tonight.",      xp:10 },
+      { id:"w_learn",    icon:"📚", name:"Read about money/business", desc:"15+ min of intentional financial learning.",      xp:10 },
     ];
 
     // Confidence habits (from confidence app, daily)
@@ -1203,35 +1311,123 @@
     ];
 
     const ACHIEVEMENTS = [
-      // Wealth
+      // ============ WEALTH ============
       { id:"first_move", icon:"⚡", name:"First Move", desc:"Complete your first action", xp:0, pillar:"wealth", check:(s)=>s.totalActions>=1 },
-      { id:"observer", icon:"👁", name:"Pattern Seeker", desc:"Log 5 problem observations", xp:100, pillar:"wealth", check:(s)=>s.journalEntries.length>=5 },
-      { id:"network_10", icon:"🔗", name:"Network Node", desc:"10 industry conversations", xp:250, pillar:"wealth", check:(s)=>s.tp.network>=10 },
-      { id:"network_50", icon:"🏆", name:"The Connector", desc:"Hit 50 conversations", xp:1000, pillar:"wealth", check:(s)=>s.tp.network>=50 },
-      { id:"ai_50", icon:"🧠", name:"AI Native", desc:"50 hours of AI work", xp:400, pillar:"wealth", check:(s)=>s.tp.ai>=50 },
-      { id:"saver_10k", icon:"💎", name:"First $10K", desc:"Save $10,000 runway", xp:300, pillar:"wealth", check:(s)=>s.tp.finance>=10000 },
-      { id:"runway", icon:"🚀", name:"Founder Ready", desc:"Hit $40K runway", xp:1000, pillar:"wealth", check:(s)=>s.tp.finance>=40000 },
-      { id:"journal_10", icon:"📓", name:"Problem Hunter", desc:"10 journal observations", xp:300, pillar:"wealth", check:(s)=>s.journalEntries.length>=10 },
-      // Life
-      { id:"fit_10", icon:"🔥", name:"Getting Stronger", desc:"10 fitness sessions", xp:100, pillar:"life", check:(s)=>s.tp.fitness>=10 },
-      { id:"fit_50", icon:"💯", name:"Iron Disciple", desc:"50 fitness sessions", xp:400, pillar:"life", check:(s)=>s.tp.fitness>=50 },
-      { id:"fit_200", icon:"🦾", name:"Beast Mode", desc:"200 fitness sessions", xp:1000, pillar:"life", check:(s)=>s.tp.fitness>=200 },
-      { id:"mind_30", icon:"☯️", name:"Inner Work", desc:"30 mind sessions", xp:200, pillar:"life", check:(s)=>s.tp.mind>=30 },
-      { id:"mind_100", icon:"🪷", name:"Centered", desc:"100 mind sessions", xp:500, pillar:"life", check:(s)=>s.tp.mind>=100 },
-      { id:"chef", icon:"👨‍🍳", name:"Home Chef", desc:"50 home-cooked meals", xp:300, pillar:"life", check:(s)=>s.tp.nutrition>=50 },
-      { id:"love_25", icon:"💖", name:"Present", desc:"25 relationship moments", xp:250, pillar:"life", check:(s)=>s.tp.relationships>=25 },
-      // Confidence
-      { id:"conf_first", icon:"✨", name:"Began", desc:"First confidence practice", xp:50, pillar:"confidence", check:(s)=>s.confTotalDays>=1 },
-      { id:"conf_perfect", icon:"🌟", name:"Perfect Day", desc:"All 7 practices in one day", xp:150, pillar:"confidence", check:(s)=>s.confPerfectDays>=1 },
-      { id:"conf_7", icon:"🔥", name:"Week Strong", desc:"Practices on 7 days", xp:200, pillar:"confidence", check:(s)=>s.confTotalDays>=7 },
-      { id:"conf_30", icon:"👑", name:"Locked In", desc:"Practices on 30 days", xp:600, pillar:"confidence", check:(s)=>s.confTotalDays>=30 },
-      { id:"conf_perfect_5", icon:"💎", name:"5 Perfect Days", desc:"5 days with all 7 done", xp:400, pillar:"confidence", check:(s)=>s.confPerfectDays>=5 },
-      { id:"wins_10", icon:"📝", name:"Win Logger", desc:"10 days of wins logged", xp:200, pillar:"confidence", check:(s)=>s.winDaysCount>=10 },
-      // Balance
-      { id:"bal_5", icon:"⚖️", name:"Balanced", desc:"All 3 pillars to Level 5", xp:400, pillar:"balance", check:(s)=>calcLevel(s.wealthXp).lvl>=5 && calcLevel(s.lifeXp).lvl>=5 && calcLevel(s.confXp).lvl>=5 },
-      { id:"bal_10", icon:"🏛", name:"Whole Self", desc:"All 3 pillars to Level 10", xp:1000, pillar:"balance", check:(s)=>calcLevel(s.wealthXp).lvl>=10 && calcLevel(s.lifeXp).lvl>=10 && calcLevel(s.confXp).lvl>=10 },
-      { id:"streak_7", icon:"🔥", name:"Week Locked In", desc:"7-day app streak", xp:200, pillar:"balance", check:(s)=>s.streak>=7 },
-      { id:"streak_30", icon:"⚡", name:"Unstoppable", desc:"30-day streak", xp:800, pillar:"balance", check:(s)=>s.streak>=30 },
+
+      // Industry Exposure
+      { id:"industry_3",  icon:"🏢", name:"On The Inside",     desc:"3 months industry exposure",  xp:150,  pillar:"wealth", check:(s)=>s.tp.industry>=3 },
+      { id:"industry_6",  icon:"🏛", name:"Half Year In",      desc:"6 months industry exposure",  xp:400,  pillar:"wealth", check:(s)=>s.tp.industry>=6 },
+      { id:"industry_12", icon:"🏰", name:"Year One Complete", desc:"12 months industry exposure", xp:1500, pillar:"wealth", check:(s)=>s.tp.industry>=12 },
+
+      // AI Fluency
+      { id:"ai_10",  icon:"🤖", name:"Prompt Padawan", desc:"10 hours of AI work",  xp:100,  pillar:"wealth", check:(s)=>s.tp.ai>=10 },
+      { id:"ai_50",  icon:"🧠", name:"AI Native",      desc:"50 hours of AI work",  xp:400,  pillar:"wealth", check:(s)=>s.tp.ai>=50 },
+      { id:"ai_100", icon:"⚙️", name:"AI Architect",   desc:"100 hours of AI work", xp:1200, pillar:"wealth", check:(s)=>s.tp.ai>=100 },
+
+      // Network Building
+      { id:"network_5",  icon:"🌱", name:"First Connections", desc:"5 industry conversations",  xp:100,  pillar:"wealth", check:(s)=>s.tp.network>=5 },
+      { id:"network_10", icon:"🔗", name:"Network Node",      desc:"10 industry conversations", xp:250,  pillar:"wealth", check:(s)=>s.tp.network>=10 },
+      { id:"network_25", icon:"🕸", name:"Web Builder",       desc:"25 conversations",          xp:550,  pillar:"wealth", check:(s)=>s.tp.network>=25 },
+      { id:"network_50", icon:"🏆", name:"The Connector",     desc:"Hit 50 conversations",      xp:1500, pillar:"wealth", check:(s)=>s.tp.network>=50 },
+
+      // Financial Foundation
+      { id:"saver_1k",  icon:"🪙", name:"First Thousand",     desc:"Save $1,000",          xp:75,   pillar:"wealth", check:(s)=>s.tp.finance>=1000 },
+      { id:"saver_5k",  icon:"💵", name:"Five K",             desc:"Save $5,000",          xp:200,  pillar:"wealth", check:(s)=>s.tp.finance>=5000 },
+      { id:"saver_10k", icon:"💎", name:"First $10K",         desc:"Save $10,000 runway",  xp:300,  pillar:"wealth", check:(s)=>s.tp.finance>=10000 },
+      { id:"saver_25k", icon:"💰", name:"Quarter to Founder", desc:"Save $25,000",         xp:700,  pillar:"wealth", check:(s)=>s.tp.finance>=25000 },
+      { id:"runway",    icon:"🚀", name:"Founder Ready",      desc:"Hit $40K runway",      xp:1000, pillar:"wealth", check:(s)=>s.tp.finance>=40000 },
+
+      // Problem Journal
+      { id:"observer",    icon:"👁", name:"Pattern Seeker",    desc:"Log 5 problem observations",  xp:100,  pillar:"wealth", check:(s)=>s.journalEntries.length>=5 },
+      { id:"journal_10",  icon:"📓", name:"Problem Hunter",    desc:"10 journal observations",     xp:300,  pillar:"wealth", check:(s)=>s.journalEntries.length>=10 },
+      { id:"journal_25",  icon:"📚", name:"Pain Point Mapper", desc:"25 journal observations",     xp:600,  pillar:"wealth", check:(s)=>s.journalEntries.length>=25 },
+      { id:"journal_50",  icon:"🔍", name:"Idea Library",      desc:"50 journal observations",     xp:1200, pillar:"wealth", check:(s)=>s.journalEntries.length>=50 },
+
+      // Wealth XP milestones
+      { id:"wealth_xp_1k",  icon:"💼", name:"Building Momentum", desc:"Reach 1,000 Wealth XP",  xp:100, pillar:"wealth", check:(s)=>s.wealthXp>=1000 },
+      { id:"wealth_xp_5k",  icon:"📈", name:"Compounding",       desc:"Reach 5,000 Wealth XP",  xp:400, pillar:"wealth", check:(s)=>s.wealthXp>=5000 },
+      { id:"wealth_xp_10k", icon:"💸", name:"Wealth Engine",     desc:"Reach 10,000 Wealth XP", xp:1000, pillar:"wealth", check:(s)=>s.wealthXp>=10000 },
+
+      // ============ LIFE ============
+      // Fitness
+      { id:"fit_1",   icon:"💪", name:"Showed Up",       desc:"First fitness session",  xp:30,   pillar:"life", check:(s)=>s.tp.fitness>=1 },
+      { id:"fit_10",  icon:"🔥", name:"Getting Stronger", desc:"10 fitness sessions",   xp:100,  pillar:"life", check:(s)=>s.tp.fitness>=10 },
+      { id:"fit_50",  icon:"💯", name:"Iron Disciple",   desc:"50 fitness sessions",   xp:400,  pillar:"life", check:(s)=>s.tp.fitness>=50 },
+      { id:"fit_100", icon:"🏋", name:"Built",           desc:"100 fitness sessions",  xp:700,  pillar:"life", check:(s)=>s.tp.fitness>=100 },
+      { id:"fit_200", icon:"🦾", name:"Beast Mode",      desc:"200 fitness sessions",  xp:1500, pillar:"life", check:(s)=>s.tp.fitness>=200 },
+
+      // Mind
+      { id:"mind_5",   icon:"🌱", name:"Began Within", desc:"5 mind sessions",   xp:50,   pillar:"life", check:(s)=>s.tp.mind>=5 },
+      { id:"mind_30",  icon:"☯️", name:"Inner Work",   desc:"30 mind sessions",  xp:200,  pillar:"life", check:(s)=>s.tp.mind>=30 },
+      { id:"mind_100", icon:"🪷", name:"Centered",     desc:"100 mind sessions", xp:500,  pillar:"life", check:(s)=>s.tp.mind>=100 },
+      { id:"mind_200", icon:"🧘", name:"Equanimous",   desc:"200 mind sessions", xp:900,  pillar:"life", check:(s)=>s.tp.mind>=200 },
+      { id:"mind_365", icon:"🌟", name:"Year of Practice", desc:"365 mind sessions", xp:2000, pillar:"life", check:(s)=>s.tp.mind>=365 },
+
+      // Nutrition
+      { id:"chef_5",   icon:"🥗", name:"Real Food",     desc:"5 home-cooked meals",   xp:50,   pillar:"life", check:(s)=>s.tp.nutrition>=5 },
+      { id:"chef_25",  icon:"🍲", name:"Cooking",       desc:"25 home-cooked meals",  xp:150,  pillar:"life", check:(s)=>s.tp.nutrition>=25 },
+      { id:"chef",     icon:"👨‍🍳", name:"Home Chef",     desc:"50 home-cooked meals",  xp:300,  pillar:"life", check:(s)=>s.tp.nutrition>=50 },
+      { id:"chef_100", icon:"🔪", name:"Kitchen Boss",  desc:"100 home-cooked meals", xp:700,  pillar:"life", check:(s)=>s.tp.nutrition>=100 },
+      { id:"chef_250", icon:"🏅", name:"Master Chef",   desc:"250 home-cooked meals", xp:1500, pillar:"life", check:(s)=>s.tp.nutrition>=250 },
+
+      // Relationships
+      { id:"love_5",   icon:"💌", name:"Reaching Out", desc:"5 relationship moments",   xp:75,   pillar:"life", check:(s)=>s.tp.relationships>=5 },
+      { id:"love_25",  icon:"💖", name:"Present",      desc:"25 relationship moments",  xp:250,  pillar:"life", check:(s)=>s.tp.relationships>=25 },
+      { id:"love_50",  icon:"🫂", name:"Connected",    desc:"50 relationship moments",  xp:500,  pillar:"life", check:(s)=>s.tp.relationships>=50 },
+      { id:"love_100", icon:"💝", name:"Beloved",      desc:"100 relationship moments", xp:1200, pillar:"life", check:(s)=>s.tp.relationships>=100 },
+
+      // Life XP milestones
+      { id:"life_xp_1k",  icon:"🌿", name:"Rooted",      desc:"Reach 1,000 Life XP",  xp:100, pillar:"life", check:(s)=>s.lifeXp>=1000 },
+      { id:"life_xp_5k",  icon:"🌳", name:"Flourishing", desc:"Reach 5,000 Life XP",  xp:400, pillar:"life", check:(s)=>s.lifeXp>=5000 },
+      { id:"life_xp_10k", icon:"🌲", name:"Life Engine", desc:"Reach 10,000 Life XP", xp:1000, pillar:"life", check:(s)=>s.lifeXp>=10000 },
+
+      // ============ CONFIDENCE / SELF ============
+      // Practice days
+      { id:"conf_first", icon:"✨", name:"Began",         desc:"First confidence practice", xp:50,   pillar:"confidence", check:(s)=>s.confTotalDays>=1 },
+      { id:"conf_7",     icon:"🔥", name:"Week Strong",   desc:"Practices on 7 days",       xp:200,  pillar:"confidence", check:(s)=>s.confTotalDays>=7 },
+      { id:"conf_30",    icon:"👑", name:"Locked In",     desc:"Practices on 30 days",      xp:600,  pillar:"confidence", check:(s)=>s.confTotalDays>=30 },
+      { id:"conf_60",    icon:"⚡", name:"Habit Formed",  desc:"Practices on 60 days",      xp:1000, pillar:"confidence", check:(s)=>s.confTotalDays>=60 },
+      { id:"conf_100",   icon:"💯", name:"Three Digits",  desc:"Practices on 100 days",     xp:1500, pillar:"confidence", check:(s)=>s.confTotalDays>=100 },
+      { id:"conf_365",   icon:"🌟", name:"Year of Self",  desc:"Practices on 365 days",     xp:3000, pillar:"confidence", check:(s)=>s.confTotalDays>=365 },
+
+      // Perfect days (all 7 practices in one day)
+      { id:"conf_perfect",    icon:"🌟", name:"Perfect Day",     desc:"All 7 practices in one day", xp:150,  pillar:"confidence", check:(s)=>s.confPerfectDays>=1 },
+      { id:"conf_perfect_5",  icon:"💎", name:"5 Perfect Days",  desc:"5 days with all 7 done",     xp:400,  pillar:"confidence", check:(s)=>s.confPerfectDays>=5 },
+      { id:"conf_perfect_15", icon:"💠", name:"15 Perfect Days", desc:"15 perfect days",            xp:900,  pillar:"confidence", check:(s)=>s.confPerfectDays>=15 },
+      { id:"conf_perfect_30", icon:"👑", name:"30 Perfect Days", desc:"30 perfect days",            xp:1800, pillar:"confidence", check:(s)=>s.confPerfectDays>=30 },
+
+      // Wins
+      { id:"wins_5",   icon:"📝", name:"Win Spotter",    desc:"5 days of wins logged",   xp:100,  pillar:"confidence", check:(s)=>s.winDaysCount>=5 },
+      { id:"wins_10",  icon:"📜", name:"Win Logger",     desc:"10 days of wins logged",  xp:200,  pillar:"confidence", check:(s)=>s.winDaysCount>=10 },
+      { id:"wins_30",  icon:"🏅", name:"Win Collector",  desc:"30 days of wins logged",  xp:500,  pillar:"confidence", check:(s)=>s.winDaysCount>=30 },
+      { id:"wins_100", icon:"🏆", name:"Highlight Reel", desc:"100 days of wins logged", xp:1500, pillar:"confidence", check:(s)=>s.winDaysCount>=100 },
+
+      // Self XP milestones
+      { id:"self_xp_1k",  icon:"☀️", name:"Rising Sun",    desc:"Reach 1,000 Self XP",  xp:100, pillar:"confidence", check:(s)=>s.confXp>=1000 },
+      { id:"self_xp_5k",  icon:"🌅", name:"Self-Assured",  desc:"Reach 5,000 Self XP",  xp:400, pillar:"confidence", check:(s)=>s.confXp>=5000 },
+      { id:"self_xp_10k", icon:"💫", name:"Self-Made",     desc:"Reach 10,000 Self XP", xp:1000, pillar:"confidence", check:(s)=>s.confXp>=10000 },
+
+      // ============ BALANCE ============
+      // All 3 pillars to level
+      { id:"bal_3",  icon:"⚖", name:"Finding Balance", desc:"All 3 pillars to Level 3",  xp:150,  pillar:"balance", check:(s)=>calcLevel(s.wealthXp).lvl>=3 && calcLevel(s.lifeXp).lvl>=3 && calcLevel(s.confXp).lvl>=3 },
+      { id:"bal_5",  icon:"⚖️", name:"Balanced",       desc:"All 3 pillars to Level 5",  xp:400,  pillar:"balance", check:(s)=>calcLevel(s.wealthXp).lvl>=5 && calcLevel(s.lifeXp).lvl>=5 && calcLevel(s.confXp).lvl>=5 },
+      { id:"bal_10", icon:"🏛", name:"Whole Self",     desc:"All 3 pillars to Level 10", xp:1000, pillar:"balance", check:(s)=>calcLevel(s.wealthXp).lvl>=10 && calcLevel(s.lifeXp).lvl>=10 && calcLevel(s.confXp).lvl>=10 },
+      { id:"bal_15", icon:"🗿", name:"Three Pillars",  desc:"All 3 pillars to Level 15", xp:2500, pillar:"balance", check:(s)=>calcLevel(s.wealthXp).lvl>=15 && calcLevel(s.lifeXp).lvl>=15 && calcLevel(s.confXp).lvl>=15 },
+      { id:"bal_20", icon:"🏔", name:"Empire",         desc:"All 3 pillars to Level 20", xp:6000, pillar:"balance", check:(s)=>calcLevel(s.wealthXp).lvl>=20 && calcLevel(s.lifeXp).lvl>=20 && calcLevel(s.confXp).lvl>=20 },
+
+      // App streaks
+      { id:"streak_3",   icon:"🔥", name:"Got It Going",       desc:"3-day app streak",     xp:50,    pillar:"balance", check:(s)=>s.streak>=3 },
+      { id:"streak_7",   icon:"🔥", name:"Week Locked In",     desc:"7-day app streak",     xp:200,   pillar:"balance", check:(s)=>s.streak>=7 },
+      { id:"streak_30",  icon:"⚡", name:"Unstoppable",        desc:"30-day streak",        xp:800,   pillar:"balance", check:(s)=>s.streak>=30 },
+      { id:"streak_60",  icon:"🌋", name:"Habit Forged",       desc:"60-day streak",        xp:1500,  pillar:"balance", check:(s)=>s.streak>=60 },
+      { id:"streak_100", icon:"💎", name:"Triple Digits",      desc:"100-day streak",       xp:3000,  pillar:"balance", check:(s)=>s.streak>=100 },
+      { id:"streak_365", icon:"👑", name:"Year of Discipline", desc:"365-day streak",       xp:10000, pillar:"balance", check:(s)=>s.streak>=365 },
+
+      // Combined XP totals
+      { id:"total_1k",   icon:"📊", name:"First Thousand", desc:"1,000 total XP",   xp:50,   pillar:"balance", check:(s)=>(s.wealthXp+s.lifeXp+s.confXp)>=1000 },
+      { id:"total_10k",  icon:"📈", name:"Five Figures",   desc:"10,000 total XP",  xp:400,  pillar:"balance", check:(s)=>(s.wealthXp+s.lifeXp+s.confXp)>=10000 },
+      { id:"total_50k",  icon:"💼", name:"Quarter Master", desc:"50,000 total XP",  xp:1500, pillar:"balance", check:(s)=>(s.wealthXp+s.lifeXp+s.confXp)>=50000 },
+      { id:"total_100k", icon:"🌌", name:"Six Figures",    desc:"100,000 total XP", xp:5000, pillar:"balance", check:(s)=>(s.wealthXp+s.lifeXp+s.confXp)>=100000 },
     ];
 
     const WEALTH_TITLES = ["","Freshman","Hustler","Builder","Grinder","Dangerous","Operator","Founder Mode","Traction","Series A","Unicorn Hunter","Category King","Titan","Mogul","Empire","Legend","Dynasty","Icon","Immortal","Billionaire","God Mode"];
@@ -1290,10 +1486,11 @@
       return { lvl, pct: Math.min(pct, 100), next };
     }
     function getDay(key) {
-      if (!state.dailyData[key]) state.dailyData[key] = { conf: {}, life: {}, wins: "" };
+      if (!state.dailyData[key]) state.dailyData[key] = { conf: {}, life: {}, wealth: {}, wins: "" };
       const d = state.dailyData[key];
       if (!d.conf) d.conf = {};
       if (!d.life) d.life = {};
+      if (!d.wealth) d.wealth = {};
       if (d.wins === undefined) d.wins = "";
       return d;
     }
@@ -1395,8 +1592,7 @@
     }
 
     function checkAchievements() {
-      let unlocked = [];
-      // First: lock back any achievements whose condition is no longer met
+      // Step 1: re-lock any achievement whose condition is no longer met (refund XP)
       const stillValid = [];
       for (const id of state.unlockedAchievements) {
         const a = ACHIEVEMENTS.find(x => x.id === id);
@@ -1404,7 +1600,6 @@
         if (a.check(state)) {
           stillValid.push(id);
         } else {
-          // Refund the bonus XP
           if (a.xp > 0) {
             if (a.pillar === "wealth") state.wealthXp = Math.max(0, state.wealthXp - a.xp);
             else if (a.pillar === "life") state.lifeXp = Math.max(0, state.lifeXp - a.xp);
@@ -1420,26 +1615,34 @@
       }
       state.unlockedAchievements = stillValid;
 
-      // Then: unlock any newly satisfied achievements
-      for (const a of ACHIEVEMENTS) {
-        if (!state.unlockedAchievements.includes(a.id) && a.check(state)) {
-          unlocked.push(a);
-          state.unlockedAchievements.push(a.id);
-          if (a.xp > 0) {
-            if (a.pillar === "wealth") state.wealthXp += a.xp;
-            else if (a.pillar === "life") state.lifeXp += a.xp;
-            else if (a.pillar === "confidence") state.confXp += a.xp;
-            else {
-              state.wealthXp += a.xp / 3;
-              state.lifeXp += a.xp / 3;
-              state.confXp += a.xp / 3;
+      // Step 2: unlock new achievements; loop because XP rewards may trigger more
+      const allUnlocked = [];
+      for (let iter = 0; iter < 10; iter++) {
+        const roundUnlocked = [];
+        for (const a of ACHIEVEMENTS) {
+          if (!state.unlockedAchievements.includes(a.id) && a.check(state)) {
+            roundUnlocked.push(a);
+            state.unlockedAchievements.push(a.id);
+            if (a.xp > 0) {
+              if (a.pillar === "wealth") state.wealthXp += a.xp;
+              else if (a.pillar === "life") state.lifeXp += a.xp;
+              else if (a.pillar === "confidence") state.confXp += a.xp;
+              else {
+                state.wealthXp += a.xp / 3;
+                state.lifeXp += a.xp / 3;
+                state.confXp += a.xp / 3;
+              }
             }
           }
         }
+        if (roundUnlocked.length === 0) break;
+        allUnlocked.push(...roundUnlocked);
       }
-      if (unlocked.length) {
+
+      if (allUnlocked.length) {
         setTimeout(() => {
-          showToast(`🏆 ${unlocked.map(a => a.name).join(", ")}`, "var(--purple)");
+          const names = allUnlocked.map(a => a.name).join(", ");
+          showToast(`🏆 ${names}`, "var(--purple)");
         }, 500);
       }
     }
@@ -1448,6 +1651,8 @@
     function logAction(pillar, trackId, actionIdx) {
       const tracks = pillar === "wealth" ? WEALTH_TRACKS : LIFE_TRACKS;
       const track = tracks.find(t => t.id === trackId);
+      const actionObj = track.actions[actionIdx];
+      const actionName = typeof actionObj === "string" ? actionObj : actionObj.name;
       updateStreak();
       if (pillar === "wealth") state.wealthXp += track.xp;
       else state.lifeXp += track.xp;
@@ -1457,7 +1662,7 @@
         id: Date.now() + Math.random(),
         pillar,
         track: trackId,
-        action: track.actions[actionIdx],
+        action: actionName,
         date: new Date().toLocaleDateString(),
         dateKey: todayKey(),
         xp: track.xp
@@ -1472,19 +1677,26 @@
     function toggleHabit(pillar, habitId) {
       const today = todayKey();
       const day = getDay(today);
-      const habits = pillar === "confidence" ? CONFIDENCE_HABITS : LIFESTYLE_HABITS;
+      const habits = pillar === "confidence" ? CONFIDENCE_HABITS
+                   : pillar === "wealth"     ? WEALTH_HABITS
+                                             : LIFESTYLE_HABITS;
       const habit = habits.find(h => h.id === habitId);
-      const wasChecked = !!day[pillar === "confidence" ? "conf" : "life"][habitId];
+      const dayKey = pillar === "confidence" ? "conf"
+                   : pillar === "wealth"     ? "wealth"
+                                             : "life";
+      const wasChecked = !!day[dayKey][habitId];
 
       if (wasChecked) {
-        day[pillar === "confidence" ? "conf" : "life"][habitId] = false;
-        if (pillar === "confidence") state.confXp = Math.max(0, state.confXp - habit.xp);
-        else state.lifeXp = Math.max(0, state.lifeXp - habit.xp);
+        day[dayKey][habitId] = false;
+        if (pillar === "confidence")  state.confXp   = Math.max(0, state.confXp   - habit.xp);
+        else if (pillar === "wealth") state.wealthXp = Math.max(0, state.wealthXp - habit.xp);
+        else                          state.lifeXp   = Math.max(0, state.lifeXp   - habit.xp);
         state.totalActions = Math.max(0, state.totalActions - 1);
       } else {
-        day[pillar === "confidence" ? "conf" : "life"][habitId] = true;
-        if (pillar === "confidence") state.confXp += habit.xp;
-        else state.lifeXp += habit.xp;
+        day[dayKey][habitId] = true;
+        if (pillar === "confidence")  state.confXp   += habit.xp;
+        else if (pillar === "wealth") state.wealthXp += habit.xp;
+        else                          state.lifeXp   += habit.xp;
         state.totalActions++;
         updateStreak();
       }
@@ -1493,8 +1705,13 @@
       save();
       renderAll();
       if (!wasChecked) {
-        const c = pillar === "confidence" ? "var(--sage)" : "var(--mint)";
-        showToast(`+${habit.xp} ${pillar === "confidence" ? "SELF" : "LIFE"} XP`, c);
+        const c = pillar === "confidence" ? "var(--sage)"
+                : pillar === "wealth"     ? "var(--gold)"
+                                          : "var(--mint)";
+        const label = pillar === "confidence" ? "SELF"
+                    : pillar === "wealth"     ? "WEALTH"
+                                              : "LIFE";
+        showToast(`+${habit.xp} ${label} XP`, c);
       } else {
         showToast(`Undone · -${habit.xp} XP`, "var(--red)");
       }
@@ -1727,9 +1944,13 @@
             ` : ""}
             <div class="track-actions">
               ${t.actions.map((a,i)=>`
-                <button class="action-btn" onclick="logAction('${pillar}','${t.id}',${i})">
-                  <span>+ ${a}</span>
-                  <span class="xp-badge" style="color:${t.color}">+${t.xp}</span>
+                <button class="action-card" style="--track-color:${t.color}" onclick="logAction('${pillar}','${t.id}',${i})">
+                  <div class="action-icon">${t.icon}</div>
+                  <div class="action-info">
+                    <div class="action-title">${a.name}</div>
+                    <div class="action-desc">${a.desc}</div>
+                  </div>
+                  <div class="action-xp" style="color:${t.color}">+${t.xp}</div>
                 </button>
               `).join("")}
             </div>
@@ -1744,6 +1965,28 @@
       document.getElementById("wealthLvlTitle").textContent = WEALTH_TITLES[Math.min(w.lvl, 20)];
       document.getElementById("wealthLvlBar").style.width = `${w.pct}%`;
       document.getElementById("wealthLvlXp").textContent = `${state.wealthXp.toLocaleString()} / ${w.next.toLocaleString()} XP`;
+
+      // Daily wealth habits
+      const today = todayKey();
+      const day = getDay(today);
+      const done = Object.values(day.wealth).filter(Boolean).length;
+      document.getElementById("wealthTodayStats").textContent = `${done}/${WEALTH_HABITS.length}${done === WEALTH_HABITS.length ? " ✨" : ""}`;
+      document.getElementById("wealthHabits").innerHTML = WEALTH_HABITS.map(h => {
+        const checked = !!day.wealth[h.id];
+        const streak = checked ? habitStreak("wealth", h.id) : 0;
+        return `
+          <div class="habit-card wealth ${checked ? "checked" : ""}" onclick="toggleHabit('wealth','${h.id}')">
+            <div class="habit-icon">${h.icon}</div>
+            <div class="habit-info">
+              <div class="habit-title">${h.name}</div>
+              <div class="habit-desc">${h.desc}</div>
+              ${streak > 1 ? `<div class="habit-streak">🔥 ${streak}d</div>` : ""}
+            </div>
+            <div class="check-ring">${checked ? "✓" : ""}</div>
+          </div>
+        `;
+      }).join("");
+
       renderTracks(WEALTH_TRACKS, "wealth", "wealthTracks");
       const je = document.getElementById("journalEntries");
       if (state.journalEntries.length === 0) {
