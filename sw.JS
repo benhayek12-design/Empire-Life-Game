@@ -3,9 +3,7 @@
 
 const CACHE_NAME = ‘empire-os-v1’;
 const ASSETS = [
-‘./’,
-‘./empire-os.html’,
-‘./index.html’
+  './empire-os.html',
 ];
 
 // On install: pre-cache the app shell
